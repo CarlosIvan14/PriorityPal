@@ -1,6 +1,8 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import Header from './components/header';
+import Page10 from './components/page10';
+
 import Page6 from './components/Page6';
 import Footer from './components/Footer';
 import Page4 from './components/Page4';
@@ -38,5 +40,4 @@ export default function App() {
     </View>
   );
 }
-
 
