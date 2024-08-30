@@ -1,7 +1,10 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet,ViewStyle } from 'react-native';
 
-const Header = () => {
+interface HeaderProps {
+  style?: ViewStyle; // Add this line to accept style prop
+}
+const Header: React.FC<HeaderProps> = ({ style }) => {
   return (
     <View style={styles.generalBack}>
       <View style={styles.capsula}>
@@ -12,12 +15,13 @@ const Header = () => {
 
 const styles = StyleSheet.create({
   generalBack: {
+    maxHeight:80,
     flex: 1,
     backgroundColor: '#6f78fd',
   },
   capsula: {
     marginTop: '20%',
-    height: '100%',
+    height: '30%',
     borderTopRightRadius: 200,
     borderTopLeftRadius: 200,
     backgroundColor: 'white',
