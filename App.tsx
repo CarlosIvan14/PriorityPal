@@ -21,8 +21,6 @@ export default function App() {
     <View style={styles.container}> 
       <Header />
       <Page10/>
-      <Text>perro</Text> 
-
     </View>
   );
 }
