@@ -8,9 +8,10 @@ import Page3 from './components/Page3';
 import Page4 from './components/Page4';
 import Page5 from './components/Page5';
 import Page6 from './components/Page6';
-//Pagina 7
-//Pagina 8
-//Pagina 9
+import Page7 from './components/Page7';
+import Page8 from './components/Page8';
+import Page9 from './components/Page9';
+import Page9_1 from './components/Page9_1';
 import Page10 from './components/page10';
 import Page11 from './components/Page11';
 import Page12 from './components/Page12';
@@ -37,10 +38,9 @@ const styles = StyleSheet.create({
 export default function App() {
   return (
     <View style={styles.container}>
-      
       <Header style={styles.header} />
       <View style={styles.content}>
-      <Page3/>
+      <Page1/>
       </View>
       <Footer/>
     </View>
