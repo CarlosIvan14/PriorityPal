@@ -1,8 +1,8 @@
 Prerequisites
 To run this project on your desktop please
-First, clone this repositorie.
+First, clone this repository.
 Second, run npm install in your bash.
-Third, Install Andorid studio and configure it.
+Third, Install Android studio and configure it --> this implies having a virtual Android device already set up (version 12 or higher).
 Now continue with the next instructions
 
 # Getting Started
