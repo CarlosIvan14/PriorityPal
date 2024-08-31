@@ -1,4 +1,9 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+Prerequisites
+To run this project on your desktop please
+First, clone this repositorie.
+Second, run npm install in your bash.
+Third, Install Andorid studio and configure it.
+Now continue with the next instructions
 
 # Getting Started
 
