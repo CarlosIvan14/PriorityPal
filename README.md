@@ -1,4 +1,4 @@
-Prerequisites
+# Prerequisites
 To run this project on your desktop please
 First, clone this repository.
 Second, run npm install in your bash.
