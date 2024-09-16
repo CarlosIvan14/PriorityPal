@@ -1,12 +1,17 @@
+import { useNavigation } from '@react-navigation/native';//Importante de importar para lo de stack navigation
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';//Importante de importar para lo de stack navigation
+import { RootStackParamList } from '../navigation/types';//Importante de importar para lo de stack navigation
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, KeyboardAvoidingView, Platform, TouchableOpacity } from 'react-native';
 
+type PageScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Page1'>; //Importante que lo tenga para las rutas o nombre de la pagina a la que se dirige
+
 const Page1 = () => {
   const [checked, setChecked] = useState(false);
+  const navigation = useNavigation<PageScreenNavigationProp>();//Con esta variable se accese a las caracteristicas de navigation
 
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'android' ? 'padding' : 'height'}>
-      
       <Text style={styles.title}>Username</Text>
       <TextInput style={styles.input} placeholder='Insert your Username here'/>
       <Text style={styles.title}>Password</Text>
@@ -22,9 +27,8 @@ const Page1 = () => {
           <Text style={styles.label}>Forgot Password?</Text>
         </TouchableOpacity>
       </View>
-
-      <TouchableOpacity style={styles.botton}>
-        <Text style={styles.textbotton}>Log In</Text>
+      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Page3')}>{/*Asi es como se pone la pagina a que se direge*/ }
+        <Text style={styles.textButton}>Log In</Text>
       </TouchableOpacity>
     </KeyboardAvoidingView>
   );
@@ -35,7 +39,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop:50,
+    marginTop: 50,
   },
   title: {
     fontSize: 20,
@@ -52,17 +56,16 @@ const styles = StyleSheet.create({
     width: 320,
     marginBottom: 20,
   },
-  botton: {
+  button: {
     backgroundColor: '#004aad',
     borderRadius: 50,
     height: 60,
     width: '80%',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop:60,
-    
+    marginTop: 60,
   },
-  textbotton: {
+  textButton: {
     color: 'white',
     fontSize: 20,
     textAlign: 'center',

@@ -30,6 +30,7 @@ const Page2 = () => {
                 <Image source={require('../public/user2.png')} style={styles.buttomImage}/>
           </TouchableOpacity>
             </View>
+            
         </View>
     </View>
   );
@@ -58,8 +59,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     buttomImage:{
-        width:80,
-        height:80,
+        width:70,
+        height:70,
         marginTop:10,
         marginLeft:35,
       },
