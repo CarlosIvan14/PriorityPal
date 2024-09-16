@@ -15,6 +15,7 @@ import Page9_1 from './components/Page9_1';
 import Page10 from './components/page10';
 import Page11 from './components/Page11';
 import Page12 from './components/Page12';
+import MainStack from './navigation/MainStack';
 
 const styles = StyleSheet.create({
   container: {
@@ -31,16 +32,17 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     justifyContent: 'center',
-    paddingBottom: 250,
+    paddingBottom: 100,
   },
 });
 
 export default function App() {
   return (
     <View style={styles.container}>
+      
       <Header style={styles.header} />
       <View style={styles.content}>
-      <Page1/>
+        <MainStack/>
       </View>
       <Footer/>
     </View>

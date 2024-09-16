@@ -36,7 +36,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#6f78fd',
     padding: 10,
     alignItems: 'center',
-    height:'10%',
+    height:'9%',
   },
   footerText: {
     fontFamily:'Montserrat',
@@ -47,8 +47,8 @@ const styles = StyleSheet.create({
     flexDirection:'row',
   },
   buttomImage:{
-    width:60,
-    height:60,
+    width:55,
+    height:55,
     marginHorizontal:20,
   }
 });
