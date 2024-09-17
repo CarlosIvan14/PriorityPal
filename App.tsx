@@ -16,6 +16,7 @@ import Page10 from './components/page10';
 import Page11 from './components/Page11';
 import Page12 from './components/Page12';
 import MainStack from './navigation/MainStack';
+import { NavigationContainer } from '@react-navigation/native';
 
 const styles = StyleSheet.create({
   container: {
@@ -38,14 +39,15 @@ const styles = StyleSheet.create({
 
 export default function App() {
   return (
+    <NavigationContainer>
     <View style={styles.container}>
-      
       <Header style={styles.header} />
       <View style={styles.content}>
         <MainStack/>
       </View>
       <Footer/>
     </View>
+    </NavigationContainer>
   );
 }
 

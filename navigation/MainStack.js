@@ -20,7 +20,6 @@ const Stack = createNativeStackNavigator()
 
 const MainStack = () => {
   return (
-    <NavigationContainer>
         <Stack.Navigator 
             screenOptions={{
                 headerShown: false,
@@ -104,7 +103,6 @@ const MainStack = () => {
             />
             
             </Stack.Navigator>
-    </NavigationContainer>
   );
 };
 

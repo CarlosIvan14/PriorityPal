@@ -1,13 +1,20 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../navigation/types';
 
-export default function Page8() {
+type Page8NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
+const Page8 = () => {
+  const navigation = useNavigation<Page8NavigationProp>();
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Tareas:</Text>
 
-      <TouchableOpacity style={styles.button}>
-        <Text style={styles.buttonText}>Ver todas</Text>
+      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Page7')}>
+        <Text style={styles.buttonText}>Ver todas las tareas del equipo</Text>
       </TouchableOpacity>
 
       <View style={styles.descriptionCard}>
@@ -17,7 +24,7 @@ export default function Page8() {
       </View>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -63,3 +70,5 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
 });
+
+export default Page8;

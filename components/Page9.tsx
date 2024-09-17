@@ -1,5 +1,10 @@
 import React from 'react';
-import { View, Text, StyleSheet, FlatList, Image } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../navigation/types';
+
+type Page9NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const messages = [
   { id: '1', name: 'Aaron Loeb', message: 'Hello, how are you?', img: 'https://via.placeholder.com/50' },
@@ -7,6 +12,8 @@ const messages = [
 ];
 
 export default function Page9() {
+  const navigation = useNavigation<Page9NavigationProp>();
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Chat de equipo</Text>
@@ -15,13 +22,16 @@ export default function Page9() {
         data={messages}
         keyExtractor={item => item.id}
         renderItem={({ item }) => (
-          <View style={styles.messageContainer}>
+          <TouchableOpacity 
+            style={styles.messageContainer} 
+            onPress={() => navigation.navigate('Page9_1')}
+          >
             <Image source={{ uri: item.img }} style={styles.avatar} />
             <View>
               <Text style={styles.name}>{item.name}</Text>
               <Text style={styles.message}>{item.message}</Text>
             </View>
-          </View>
+          </TouchableOpacity>
         )}
       />
     </View>

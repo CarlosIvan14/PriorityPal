@@ -1,5 +1,8 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../navigation/types';
 
 interface User {
   id: string;
@@ -10,16 +13,26 @@ interface UserListProps {
   names: User[];
 }
 
-const UserList: React.FC<UserListProps> = ({ names }) => (
-  <View style={styles.userListContainer}>
-    {names.map(user => (
-      <View key={user.id} style={styles.userItem}>
-        <View style={styles.avatar} />
-        <Text style={styles.userName}>{user.name}</Text>
-      </View>
-    ))}
-  </View>
-);
+type UserListNavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
+const UserList: React.FC<UserListProps> = ({ names }) => {
+  const navigation = useNavigation<UserListNavigationProp>();
+
+  return (
+    <View style={styles.userListContainer}>
+      {names.map(user => (
+        <TouchableOpacity 
+          key={user.id} 
+          style={styles.userItem} 
+          onPress={() => navigation.navigate('Page4')}
+        >
+          <View style={styles.avatar} />
+          <Text style={styles.userName}>{user.name}</Text>
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
   userListContainer: {

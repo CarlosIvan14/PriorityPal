@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import Ionicons from 'react-native-vector-icons/Ionicons'; 
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../navigation/types';
+
+type Page6NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const teams = [
   { id: 1, name: 'Equipo 1', tasks: ['Tarea 1', 'Tarea 2', 'Tarea 3'] },
@@ -12,6 +17,7 @@ const teams = [
 const Page6: React.FC = () => {
   const [selectedTeam, setSelectedTeam] = useState<number | null>(null);
   const [showTasks, setShowTasks] = useState<boolean>(false);
+  const navigation = useNavigation<Page6NavigationProp>();
 
   const handleTeamPress = (teamId: number) => {
     if (selectedTeam === teamId) {
@@ -62,9 +68,11 @@ const Page6: React.FC = () => {
         <Text style={styles.tasksTitle}>Tareas:</Text>
         <View style={styles.tasksList}>
           {team.tasks.map((task, index) => (
-            <Text key={index} style={styles.taskItem}>
-              ○ {task}
-            </Text>
+            <TouchableOpacity key={index} onPress={() => navigation.navigate('Page8')}>
+              <Text style={styles.taskItem}>
+                ○ {task}
+              </Text>
+            </TouchableOpacity>
           ))}
         </View>
       </View>

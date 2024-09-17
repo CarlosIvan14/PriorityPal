@@ -1,13 +1,20 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../navigation/types';
+
+type Page3NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const Page3 = () => {
+    const navigation = useNavigation<Page3NavigationProp>();
+
     return (
         <View style={styles.container}>
             <Text style={styles.pagetitle}>Admin Home</Text>
             <View style={styles.graybox}>
                 <View style={styles.bluebox}>
-                    <TouchableOpacity style={styles.button}>
+                    <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Page12')}>
                         <Text style={styles.title}>
                             Add{'\n'} 
                             Person
@@ -18,7 +25,7 @@ const Page3 = () => {
             </View>
             <View style={styles.graybox}>
                 <View style={styles.bluebox}>
-                    <TouchableOpacity style={styles.button}>
+                    <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Page11')}>
                         <Text style={styles.title}>
                             Add{'\n'} 
                             Task
@@ -29,7 +36,7 @@ const Page3 = () => {
             </View>
             <View style={styles.graybox}>
                 <View style={styles.bluebox}>
-                    <TouchableOpacity style={styles.button}>
+                    <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Page6')}>
                         <Text style={styles.title}>
                             Teams
                         </Text>
