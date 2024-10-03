@@ -83,7 +83,8 @@ router.post('/search', async (req, res) => {
 });
 
 // Fuzzy Search
-async function taskFuzzySearch(busqueda) {
+router.get('/search', async (req, res) => {
+    const busqueda = req.query.q;
     try {
         const resultadoBusqueda = await UserModel.aggregate([
             {
@@ -103,7 +104,7 @@ async function taskFuzzySearch(busqueda) {
     } catch (error) {
         throw error;
     }
-}
+});
 
 
 module.exports = router;

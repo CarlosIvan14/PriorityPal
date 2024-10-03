@@ -52,7 +52,8 @@ router.delete('/:id', async (req, res) => {
 });
 
 // Fuzzy Search
-async function taskFuzzySearch(busqueda) {
+router.get('/search', async (req, res) => {
+    const busqueda = req.query.q;
     try {
         const resultadoBusqueda = await TaskModel.aggregate([
             {
@@ -72,6 +73,6 @@ async function taskFuzzySearch(busqueda) {
     } catch (error) {
         console.log("Error en la busqueda: ", error);
     }
-}
+});
 
 module.exports = router;
