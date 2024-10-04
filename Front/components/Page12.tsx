@@ -29,11 +29,11 @@ const Page12 = () => {
 
       if (response.ok) {
         Alert.alert('Éxito', 'Usuario creado exitosamente');
-        setUsername(username);
-        setPassword(password);
-        setRole(role);
-        setArea(area);
-        setName(name);
+        setUsername('');
+        setPassword('');
+        setRole('');
+        setArea('');
+        setName('');
       } else {
         Alert.alert('Error', data.message);
       }
@@ -76,9 +76,18 @@ const Page12 = () => {
             value={area}
             onChangeText={setArea}
             />
+          <Text style={styles.label}>Role del usuario:</Text>
+          <TextInput style={styles.input}
+            placeholder="Introduce el role del usuario" 
+            value={role}
+            onChangeText={setRole}
+            />
           <Text style={styles.label}>Usuario:</Text>
           <TextInput style={styles.input} 
-            placeholder="Introduce el usuario del empleado" />
+            placeholder="Introduce el usuario del empleado" 
+            value={username}
+            onChangeText={setUsername}
+            />
           <Text style={styles.label}>Contraseña:</Text>
           <TextInput 
               style={styles.input} 
@@ -88,7 +97,7 @@ const Page12 = () => {
               onChangeText={setPassword}
               
           />
-          <Button title="Añadir" onPress={() => {handleCreateUser}}/>
+          <Button title="Añadir" onPress={handleCreateUser}/>
         </View>
       ) : (
         <View style={styles.formContainer}>
