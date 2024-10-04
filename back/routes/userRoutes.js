@@ -30,17 +30,20 @@ router.get('/:id', async (req, res) => {
 
 // Crear un nuevo usuario
 router.post('/', async (req, res) => {
-    const { id, role, name, cv, username, password, area } = req.body;
+    const { role, name, cv, username, password, area } = req.body;
 
     try {
-        const hashedPassword= await bcrypt.hash(password, 10);
+        if(!username || !password || !role || !area ||!name){
+            return res.status(400).json({message: 'Todos los campos son requeridos, llena los faltantes'})
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);  // Encriptar la contraseña
         const newUser = new UserModel({
-            id,
             role,
             name,
             cv,
             username,
-            password,
+            password: hashedPassword,  // Guardar la contraseña encriptada
             area
         });
 
@@ -74,10 +77,10 @@ router.delete('/:id', async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 });
-// Fuzzy Search
+
+// Fuzzy Search para buscar usuarios
 router.get('/search', async (req, res) => {
-    const busqueda = req.query.q; // Captura la búsqueda de la consulta
-    console.log("Buscando:", busqueda); // Imprime la búsqueda
+    const busqueda = req.query.q;
     try {
         const resultadoBusqueda = await UserModel.aggregate([
             {
@@ -93,11 +96,8 @@ router.get('/search', async (req, res) => {
                 }
             }
         ]);
-        
-        console.log("Resultados encontrados:", resultadoBusqueda.length); // Imprime la cantidad de resultados
         res.status(200).json(resultadoBusqueda);
     } catch (error) {
-        console.error(error); // Imprime el error en la consola
         res.status(500).json({ message: error.message });
     }
 });
@@ -113,7 +113,6 @@ router.post('/login', async (req, res) => {
             return res.status(401).json({ message: 'Usuario o contraseña incorrectos' });
         }
 
-        // Verificar la contraseña
         const isPasswordValid = await bcrypt.compare(password, user.password);
 
         if (!isPasswordValid) {
@@ -122,14 +121,8 @@ router.post('/login', async (req, res) => {
 
         return res.status(200).json({ message: 'Inicio de sesión exitoso', user });
     } catch (error) {
-        console.error('Error en el servidor:', error);
         return res.status(500).json({ message: 'Error en el servidor', error });
     }
 });
-
-
-
-
-
 
 module.exports = router;
