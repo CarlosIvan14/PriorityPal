@@ -1,9 +1,9 @@
 import React, { useState } from 'react'
 import { View, Text, Image, Pressable, StyleSheet,  FlatList } from 'react-native'
-
+import { useUser } from './UserContext';
 
 export default function Page10() {
-  
+  const { user } = useUser();
   const [tasks, setTasks] = useState([
     { id: '1', title: 'Tarea 1' },
     { id: '2', title: 'Tarea 2' },
@@ -20,8 +20,8 @@ export default function Page10() {
           source={{ uri: 'https://your-image-url.com/profile.jpg' }} 
           style={styles.profileImage} 
         />
-        <Text style={styles.name}>Miguel Angel</Text>
-        <Text style={styles.title}>Ingeniero</Text>
+        <Text style={styles.name}>{user?.name || 'Nombre no disponible'}</Text>
+        <Text style={styles.title}>{user?.role || 'Rol no disponible'}</Text>
       </View>
       
       {/* Information Boxes */}

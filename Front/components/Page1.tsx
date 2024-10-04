@@ -2,6 +2,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 import React, { useState } from 'react';
+import { useUser } from './UserContext'; 
 import { View, Text, StyleSheet, TextInput, KeyboardAvoidingView, Platform, TouchableOpacity, Alert } from 'react-native';
 
 type PageScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Page1'>;
@@ -11,9 +12,9 @@ const Page1 = () => {
   const [password, setPassword] = useState('');
   const [checked, setChecked] = useState(false);
   const navigation = useNavigation<PageScreenNavigationProp>();
+  const { setUser } = useUser(); // Obtén la función setUser del contexto
 
   const handleLogin = async () => {
-    // Hacer la solicitud POST al backend
     try {
       const response = await fetch('http://10.0.2.2:3000/users/login', {
         method: 'POST',
@@ -22,13 +23,19 @@ const Page1 = () => {
         },
         body: JSON.stringify({ username, password }),
       });
-
+  
       const data = await response.json();
-
+      console.log(data);
       if (response.ok) {
         Alert.alert('Éxito', data.message);
-        // Aquí puedes redirigir a otra página si es necesario
-        navigation.navigate('Page3');
+        setUser(data.user); // Almacena los datos del usuario en el contexto
+        const userRole = data.user.role;
+        // Verificar el rol del usuario en la respuesta
+        if (userRole === 'Admin') {
+          navigation.navigate('Page3'); // Redirige a Page3 si es Admin
+        } else if (userRole === 'Empleado') {
+          navigation.navigate('Page2'); // Redirige a Page2 si es Empleado
+        }
       } else {
         Alert.alert('Error', data.message);
       }
@@ -45,22 +52,22 @@ const Page1 = () => {
         placeholder='Nombre de usuario'
         value={username}
         onChangeText={setUsername} // Actualiza el estado al cambiar el texto
+        autoComplete='off' // Desactiva el autocompletado
+        autoCorrect={false} // Desactiva la corrección automática
+        autoCapitalize='none' // Desactiva la capitalización automática
       />
-      <Text style={styles.title2}>Contraseña</Text>
+      <Text style={styles.title1l}>Contraseña</Text>
       <TextInput
         style={styles.input}
         placeholder='Contraseña'
         secureTextEntry // Para ocultar la contraseña
         value={password}
         onChangeText={setPassword} // Actualiza el estado al cambiar el texto
+        autoComplete='off' // Desactiva el autocompletado
+        autoCorrect={false} // Desactiva la corrección automática
+        autoCapitalize='none' // Desactiva la capitalización automática
       />
       <View style={styles.buttonRow}>
-        <TouchableOpacity style={styles.checkboxContainer} onPress={() => setChecked(!checked)}>
-          <View style={[styles.checkbox, checked && styles.checkboxChecked]}>
-            {checked && <Text style={styles.checkmark}>✓</Text>}
-          </View>
-          <Text style={styles.label}>Recordar sesión</Text>
-        </TouchableOpacity>
         <TouchableOpacity style={styles.forgotPassword}>
           <Text style={styles.label}>Olvidaste tu contraseña?</Text>
         </TouchableOpacity>
@@ -84,6 +91,16 @@ const styles = StyleSheet.create({
     color: '#333333',
     fontWeight: 'bold',
     paddingRight: 160,
+    paddingBottom: '2%',
+    paddingTop: '2%',
+    marginBottom: 5,
+    marginTop: 10,
+  },
+  title1l: {
+    fontSize: 20,
+    color: '#333333',
+    fontWeight: 'bold',
+    paddingRight: 225,
     paddingBottom: '2%',
     paddingTop: '2%',
     marginBottom: 5,
