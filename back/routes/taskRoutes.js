@@ -1,6 +1,8 @@
 const express = require('express');
 const TaskModel = require('../Models/Task');
 const router = express.Router();
+const mongoose = require('mongoose');
+
 
 // Obtener todas las tareas
 router.get('/', async (req, res) => {
@@ -51,27 +53,49 @@ router.delete('/:id', async (req, res) => {
     }
 });
 
+
 // Fuzzy Search
-async function taskFuzzySearch(busqueda) {
+router.get('/search', async (req, res) => {
+    const busqueda = req.query.q;
+    console.log("Buscando:", busqueda); // Imprime la búsqueda
     try {
         const resultadoBusqueda = await TaskModel.aggregate([
             {
                 $search: {
-                    text: {
-                        query: busqueda,
-                        path: ["task_name", "area_id"],
-                        fuzzy: {
-                            maxEdits: 3,
-                            prefixLength: 1
-                        }
+                    compound: {
+                        should: [
+                            {
+                                // Verificar si es un ID válido
+                                text: {
+                                    query: mongoose.Types.ObjectId.isValid(busqueda) ? busqueda : "", // Asegurarse de que sea un ID válido
+                                    path: "_id",
+                                    fuzzy: {
+                                        maxEdits: 1,
+                                        prefixLength: 1
+                                    }
+                                }
+                            },
+                            {
+                                text: {
+                                    query: busqueda,
+                                    path: "description",
+                                    fuzzy: {
+                                        maxEdits: 1,
+                                        prefixLength: 1
+                                    }
+                                }
+                            }
+                        ]
                     }
                 }
             }
         ]);
-        console.log("Resultados de busqueda: ", resultadoBusqueda);
+
+        console.log("Resultados encontrados:", resultadoBusqueda.length); // Imprime la cantidad de resultados
+        res.status(200).json(resultadoBusqueda);
     } catch (error) {
-        console.log("Error en la busqueda: ", error);
+        res.status(500).json({ message: error.message });
     }
-}
+});
 
 module.exports = router;

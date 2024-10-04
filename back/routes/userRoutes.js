@@ -1,6 +1,8 @@
 const express = require('express');
 const UserModel = require('../Models/User');
 const router = express.Router();
+const bcrypt = require('bcrypt');
+
 
 // Obtener todos los usuarios
 router.get('/', async (req, res) => {
@@ -31,6 +33,7 @@ router.post('/', async (req, res) => {
     const { id, role, name, cv, username, password, area } = req.body;
 
     try {
+        const hashedPassword= await bcrypt.hash(password, 10);
         const newUser = new UserModel({
             id,
             role,
@@ -71,19 +74,10 @@ router.delete('/:id', async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 });
-// Nueva ruta de búsqueda difusa
-router.post('/search', async (req, res) => {
-    const { query } = req.body; 
-    try {
-        const resultados = await taskFuzzySearch(query);
-        res.status(200).json(resultados); 
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-});
-
 // Fuzzy Search
-async function taskFuzzySearch(busqueda) {
+router.get('/search', async (req, res) => {
+    const busqueda = req.query.q; // Captura la búsqueda de la consulta
+    console.log("Buscando:", busqueda); // Imprime la búsqueda
     try {
         const resultadoBusqueda = await UserModel.aggregate([
             {
@@ -92,18 +86,50 @@ async function taskFuzzySearch(busqueda) {
                         query: busqueda,
                         path: ["name", "username"],
                         fuzzy: {
-                            maxEdits: 2,  
+                            maxEdits: 2,
                             prefixLength: 1
                         }
                     }
                 }
             }
         ]);
-        return resultadoBusqueda;
+        
+        console.log("Resultados encontrados:", resultadoBusqueda.length); // Imprime la cantidad de resultados
+        res.status(200).json(resultadoBusqueda);
     } catch (error) {
-        throw error;
+        console.error(error); // Imprime el error en la consola
+        res.status(500).json({ message: error.message });
     }
-}
+});
+
+// Endpoint de Login
+router.post('/login', async (req, res) => {
+    const { username, password } = req.body;
+
+    try {
+        const user = await UserModel.findOne({ username });
+
+        if (!user) {
+            return res.status(401).json({ message: 'Usuario o contraseña incorrectos' });
+        }
+
+        // Verificar la contraseña
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+
+        if (!isPasswordValid) {
+            return res.status(401).json({ message: 'Usuario o contraseña incorrectos' });
+        }
+
+        return res.status(200).json({ message: 'Inicio de sesión exitoso', user });
+    } catch (error) {
+        console.error('Error en el servidor:', error);
+        return res.status(500).json({ message: 'Error en el servidor', error });
+    }
+});
+
+
+
+
 
 
 module.exports = router;

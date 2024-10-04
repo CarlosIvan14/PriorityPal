@@ -1,21 +1,59 @@
-import { useNavigation } from '@react-navigation/native';//Importante de importar para lo de stack navigation
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';//Importante de importar para lo de stack navigation
-import { RootStackParamList } from '../navigation/types';//Importante de importar para lo de stack navigation
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../navigation/types';
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, KeyboardAvoidingView, Platform, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TextInput, KeyboardAvoidingView, Platform, TouchableOpacity, Alert } from 'react-native';
 
-type PageScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Page1'>; //Importante que lo tenga para las rutas o nombre de la pagina a la que se dirige
+type PageScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Page1'>;
 
 const Page1 = () => {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [checked, setChecked] = useState(false);
-  const navigation = useNavigation<PageScreenNavigationProp>();//Con esta variable se accese a las caracteristicas de navigation
+  const navigation = useNavigation<PageScreenNavigationProp>();
+
+  const handleLogin = async () => {
+    // Hacer la solicitud POST al backend
+    try {
+      const response = await fetch('http://10.0.2.2:3000/users/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        Alert.alert('Éxito', data.message);
+        // Aquí puedes redirigir a otra página si es necesario
+        navigation.navigate('Page3');
+      } else {
+        Alert.alert('Error', data.message);
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Error en el servidor, por favor intenta más tarde.');
+    }
+  };
 
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'android' ? 'padding' : 'height'}>
-      <Text style={styles.title}>Username</Text>
-      <TextInput style={styles.input} placeholder='Nombre de usuario'/>
-      <Text style={styles.title}>Contraseña</Text>
-      <TextInput style={styles.input} placeholder='Contraseña'/>
+      <Text style={styles.title1}>Nombre de Usuario</Text>
+      <TextInput
+        style={styles.input}
+        placeholder='Nombre de usuario'
+        value={username}
+        onChangeText={setUsername} // Actualiza el estado al cambiar el texto
+      />
+      <Text style={styles.title2}>Contraseña</Text>
+      <TextInput
+        style={styles.input}
+        placeholder='Contraseña'
+        secureTextEntry // Para ocultar la contraseña
+        value={password}
+        onChangeText={setPassword} // Actualiza el estado al cambiar el texto
+      />
       <View style={styles.buttonRow}>
         <TouchableOpacity style={styles.checkboxContainer} onPress={() => setChecked(!checked)}>
           <View style={[styles.checkbox, checked && styles.checkboxChecked]}>
@@ -27,7 +65,7 @@ const Page1 = () => {
           <Text style={styles.label}>Olvidaste tu contraseña?</Text>
         </TouchableOpacity>
       </View>
-      <TouchableOpacity testID="go-to-page3" style={styles.button} onPress={() => navigation.navigate('Page3')}>{/*Asi es como se pone la pagina a que se direge*/ }
+      <TouchableOpacity testID="go-to-page3" style={styles.button} onPress={handleLogin}>
         <Text style={styles.textButton}>Iniciar sesión</Text>
       </TouchableOpacity>
     </KeyboardAvoidingView>
@@ -41,7 +79,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 50,
   },
-  title: {
+  title1: {
+    fontSize: 20,
+    color: '#333333',
+    fontWeight: 'bold',
+    paddingRight: 160,
+    paddingBottom: '2%',
+    paddingTop: '2%',
+    marginBottom: 5,
+    marginTop: 10,
+  },
+  title2: {
     fontSize: 20,
     color: '#333333',
     fontWeight: 'bold',
@@ -103,7 +151,7 @@ const styles = StyleSheet.create({
   },
   forgotPassword: {
     marginLeft: 20,
-  }
+  },
 });
 
 export default Page1;
