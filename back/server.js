@@ -23,10 +23,13 @@ mongoose.connect(mongoURI)
 app.use(cors());
 app.use(express.json());
 
+
+
 // Usar las rutas
 app.use('/tasks', taskRoutes);
 app.use('/users', userRoutes);
 app.use('/areas', areaRoutes);
+
 
 app.listen(port, () => {
   console.log(`Servidor corriendo en http://localhost:${port}`);
