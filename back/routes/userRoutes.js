@@ -17,7 +17,7 @@ router.get('/', async (req, res) => {
 // Obtener un usuario por ID
 router.get('/:id', async (req, res) => {
     try {
-        const user = await UserModel.findById(req.params.id).populate('area');
+        const user = await UserModel.findById(req.params.id).populate('area');3
         if (user) {
             res.status(200).json(user);
         } else {
