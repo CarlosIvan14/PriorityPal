@@ -2,7 +2,30 @@ const express = require('express');
 const UserModel = require('../Models/User');
 const router = express.Router();
 const bcrypt = require('bcrypt');
+const Fuse = require('fuse.js'); 
 
+
+// Fuzzy Search para buscar usuarios por nombre o nombre de usuario
+router.get('/search', async (req, res) => {
+    const busqueda = req.query.q;
+
+    try {
+        const users = await UserModel.find();
+        const options = {
+            keys: ['name', 'username'],  
+            threshold: 0.1, 
+            distance: 100,
+        };
+
+        const fuse = new Fuse(users, options);
+        
+        const resultadoBusqueda = fuse.search(busqueda).map(result => result.item);
+
+        res.status(200).json(resultadoBusqueda);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
 
 // Obtener todos los usuarios
 router.get('/', async (req, res) => {
@@ -64,7 +87,7 @@ router.put('/:id', async (req, res) => {
     }
 });
 
-// Eliminar un usuario
+// Eliminar un usuario por id
 router.delete('/:id', async (req, res) => {
     try {
         const deletedUser = await UserModel.findByIdAndDelete(req.params.id);
@@ -78,29 +101,22 @@ router.delete('/:id', async (req, res) => {
     }
 });
 
-// Fuzzy Search para buscar usuarios
-router.get('/search', async (req, res) => {
-    const busqueda = req.query.q;
-    try {
-        const resultadoBusqueda = await UserModel.aggregate([
-            {
-                $search: {
-                    text: {
-                        query: busqueda,
-                        path: ["name", "username"],
-                        fuzzy: {
-                            maxEdits: 2,
-                            prefixLength: 1
-                        }
-                    }
-                }
-            }
-        ]);
-        res.status(200).json(resultadoBusqueda);
-    } catch (error) {
+//Eliminar un usuario por username
+router.delete('/deleteByUsername/:username', async (req, res) =>{
+    const { username } = req.params; 
+    try{
+        const deletedUser = await UserModel.findOneAndDelete({username});
+        if(deletedUser){
+            res.status(200).json({message: 'Usuario eliminado', user: deletedUser})
+        }else {
+            res.status(404).json({ message: 'Usuario no encontrado' });
+        }
+    }catch(error){
         res.status(500).json({ message: error.message });
     }
 });
+
+
 
 // Endpoint de Login
 router.post('/login', async (req, res) => {
