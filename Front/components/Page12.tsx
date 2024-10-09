@@ -6,6 +6,11 @@ interface Area {
   _id: string;
   name: string;
 }
+interface User {
+  _id: string;
+  username: string;
+  name: string;
+}
 
 const Page12 = () => {
   const [mode, setMode] = useState('add');
@@ -15,6 +20,7 @@ const Page12 = () => {
   const [area, setArea] = useState(''); 
   const [name,setName ]= useState('');
   const [areas, setAreas] = useState<Area[]>([]);  
+  const [searchResults, setSearchResults] = useState<User[]>([]);
 
   useEffect(() =>{
     const obtenerAreas = async () =>{
@@ -68,7 +74,55 @@ const Page12 = () => {
       Alert.alert('Error', 'Error en el servidor, por favor intenta más tarde.');
       console.error('Error creating user:', error);
     }
+  };
+
+  //Funcion para la busqueda fuzzy
+
+  const handleSearchUser = async(busqueda: string) =>{
+    setUsername(busqueda);
+
+    if(busqueda.length>0){
+      try{
+
+        const response = await fetch(`http://10.0.2.2:3000/users/search?q=${busqueda}`);
+        const results = await response.json();
+        setSearchResults(results); 
+      }catch(error){
+        console.error('Error buscando usuario: ', error);
+        setSearchResults([]);
+      }
+    }else{
+      setSearchResults([]);
+    }
+
   }
+
+  //Función para elimnar usuario
+  const handleEraseUser =  async( usernameToDelete: string) =>{
+    if(!usernameToDelete){
+      Alert.alert('Error','Es necesario ingresar el nombre de usuario que se desea eliminar');
+      return;
+    }
+
+    try{
+      const response = await fetch(`http://10.0.2.2:3000/users/deleteByUsername/${usernameToDelete}`,{
+        method: 'DELETE',
+      });
+      
+      const data = await response.json();
+
+      if(response.ok){
+        Alert.alert('Éxito', 'Usuario eliminado exitosamente')
+        setUsername('');
+      }else{
+        Alert.alert('Error', data.message)
+      }
+    }catch(error){
+      Alert.alert('Error', 'Error en el servidor, por favor intenta más tarde.');
+      console.error('Error deleting user:', error);
+    }
+  };
+
 
   return (
 
@@ -143,17 +197,31 @@ const Page12 = () => {
 
           <Button title="Añadir" onPress={handleCreateUser}/>
         </View>
-      ) : (
+      ): mode === 'delete'? (
         <View style={styles.formContainer}>
           <Text style={styles.label}>Buscar Usuario:</Text>
           <TextInput 
             style={styles.input} 
             placeholder="Buscar usuario..." 
-            onChangeText={(text) => {/* Lógica para buscar usuarios */}} 
+            value={username}
+            onChangeText={(text)=>{
+              setUsername(text);
+              handleSearchUser(text);
+            }} 
           />
-          <Button title="Eliminar" onPress={() => {/* Lógica para eliminar usuario */}} />
+          {searchResults.length > 0 && (
+            <View style={styles.resultContainer}>
+              {searchResults.map((user) => (
+              <TouchableOpacity key={user._id} onPress={() => handleEraseUser(user.username)}>
+                <Text style={styles.resultItem}>{user.name} ({user.username})</Text>
+              </TouchableOpacity>
+            ))}
+            </View>
+          )}
+          <Button title="Eliminar" onPress={() => handleEraseUser(username)} 
+          />
         </View>
-      )}
+      ):null}
       </ScrollView>
     </View>
   );
@@ -199,6 +267,24 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     flex: 1,
+  },
+  resultContainer: {
+    backgroundColor: '#ffffff',
+    borderRadius: 5,
+    padding: 10,
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    maxHeight: 150,
+    overflow: 'scroll', 
+  },
+  
+  resultItem: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+    fontSize: 16,
+    color: '#333',
   },
 
 });
