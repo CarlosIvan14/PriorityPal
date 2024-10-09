@@ -66,6 +66,7 @@ const Page11 = () => {
         },
         body: JSON.stringify({
           id_users: selectedUsers, // Enviar usuarios seleccionados
+          name: taskName,
           deadline: dueDate,
           description,
           area_id: area,

@@ -44,11 +44,12 @@ router.get('/', async (req, res) => {
 
 // Crear una nueva tarea
 router.post('/', async (req, res) => {
-    const { id_users, deadline, description, area_id } = req.body;
+    const { id_users, name, deadline, description, area_id } = req.body;
 
     try {
         const newTask = new TaskModel({
             id_users,
+            name,
             deadline,
             description,
             area_id
