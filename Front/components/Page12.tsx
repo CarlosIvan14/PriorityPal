@@ -153,6 +153,8 @@ const Page12 = () => {
             placeholder="Introduce el nombre y apellido del usuario"
             value={name}
             onChangeText={setName}
+            autoComplete='off'
+            autoCorrect={false}
           />
           
           <Text style={styles.label}>Área:</Text>
@@ -184,6 +186,8 @@ const Page12 = () => {
             placeholder="Introduce el usuario del empleado" 
             value={username}
             onChangeText={setUsername}
+            autoComplete='off'
+            autoCorrect={false}
           />
 
           <Text style={styles.label}>Contraseña:</Text>
@@ -193,6 +197,8 @@ const Page12 = () => {
             secureTextEntry 
             value={password}
             onChangeText={setPassword}
+            autoComplete='off'
+            autoCorrect={false}
           />
 
           <Button title="Añadir" onPress={handleCreateUser}/>
@@ -204,9 +210,13 @@ const Page12 = () => {
             style={styles.input} 
             placeholder="Buscar usuario..." 
             value={username}
+            autoComplete='off'
+            autoCorrect={false}
+            autoCapitalize='none'
             onChangeText={(text)=>{
               setUsername(text);
               handleSearchUser(text);
+              
             }} 
           />
           {searchResults.length > 0 && (
