@@ -3,26 +3,30 @@ import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
+import { useUser } from './UserContext'; // Importa el hook
 
 type Page3NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const Page3 = () => {
     const navigation = useNavigation<Page3NavigationProp>();
+    const { user } = useUser(); // Obtén los datos del usuario del contexto
 
     return (
         <View style={styles.container}>
             <Text style={styles.pagetitle}></Text>
-            <View style={styles.graybox}>
-                <View style={styles.bluebox}>
-                    <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Page12')}>
-                        <Text style={styles.title}>
-                            Añadir{'\n'} 
-                            Persona
-                        </Text>
-                        <Image source={require('../public/addPerson.jpg')} style={styles.buttonImage} />
-                    </TouchableOpacity>
-                </View>
-            </View>
+                    {user?.role === 'Admin' && (
+                        <View style={styles.graybox}>
+                            <View style={styles.bluebox}>
+                                <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Page12')}>
+                                    <Text style={styles.title}>
+                                        Añadir{'\n'} 
+                                        Persona
+                                    </Text>
+                                    <Image source={require('../public/addPerson.jpg')} style={styles.buttonImage} />
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    )}
             <View style={styles.graybox}>
                 <View style={styles.bluebox}>
                     <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Page11')}>
@@ -36,12 +40,24 @@ const Page3 = () => {
             </View>
             <View style={styles.graybox}>
                 <View style={styles.bluebox}>
-                    <TouchableOpacity testID="go-to-page6" style={styles.button} onPress={() => navigation.navigate('Page6')}>
-                        <Text style={styles.title}>
-                            Equipos
-                        </Text>
-                        <Image source={require('../public/addTeam.jpg')} style={styles.buttonImage} />
-                    </TouchableOpacity>
+                    {user?.role === 'Lider' && (
+                        <TouchableOpacity testID="go-to-page5" style={styles.button} onPress={() => navigation.navigate('Page5')}>
+                            <Text style={styles.title}>
+                                Ver
+                                {'\n'}Equipo
+                            </Text>
+                            <Image source={require('../public/addTeam.jpg')} style={styles.buttonImage} />
+                        </TouchableOpacity>
+                    )}
+                    {user?.role !== 'Lider' && (
+                        <TouchableOpacity testID="go-to-page65" style={styles.button} onPress={() => navigation.navigate('Page6')}>
+                            <Text style={styles.title}>
+                                Equipos
+                                {'\n'}y Areas
+                            </Text>
+                            <Image source={require('../public/addTeam.jpg')} style={styles.buttonImage} />
+                        </TouchableOpacity>
+                    )}
                 </View>
             </View>
         </View>

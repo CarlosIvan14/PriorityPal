@@ -82,4 +82,15 @@ router.delete('/deleteById/:id', async (req, res) => {
     }
 });
 
+// Obtener tareas por usuario
+router.get('/user/:userId', async (req, res) => {
+    try {
+        const tasks = await TaskModel.find({ id_users: req.params.userId }).populate('area_id');
+        res.status(200).json(tasks);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+
 module.exports = router;

@@ -19,6 +19,8 @@ const Footer: React.FC<FooterProps> = ({ style }) => {
       navigation.navigate('Page3'); // Redirige a Page3 si es Admin
     } else if (user?.role === 'Empleado') {
       navigation.navigate('Page2'); // Redirige a Page2 si es Empleado
+    } else if (user?.role === 'Lider') {
+      navigation.navigate('Page3'); // Redirige a Page3 si es Lider
     }
   };
   const handleTaskPress = () => {
@@ -26,6 +28,8 @@ const Footer: React.FC<FooterProps> = ({ style }) => {
       navigation.navigate('Page11'); // Redirige a Page3 si es Admin
     } else if (user?.role === 'Empleado') {
       navigation.navigate('Page5'); // Redirige a Page2 si es Empleado
+    } else if (user?.role === 'Lider') {
+      navigation.navigate('Page5'); // Redirige a Page5 si es Lider
     }
   };
   return (

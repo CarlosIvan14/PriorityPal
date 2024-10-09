@@ -141,4 +141,16 @@ router.post('/login', async (req, res) => {
     }
 });
 
+// Obtener usuarios por área
+router.get('/area/:areaId', async (req, res) => {
+    const { areaId } = req.params; // Obtén el ID del área de los parámetros de la solicitud
+
+    try {
+        const usersInArea = await UserModel.find({ area: areaId }).populate('area'); // Busca usuarios en el área especificada
+        res.status(200).json(usersInArea); // Devuelve los usuarios encontrados
+    } catch (error) {
+        res.status(500).json({ message: error.message }); // Manejo de errores
+    }
+});
+
 module.exports = router;

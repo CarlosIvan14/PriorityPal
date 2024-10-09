@@ -8,7 +8,6 @@ import Page5 from '../components/Page5';
 import Page9_1 from '../components/Page9_1';
 import Page11 from '../components/Page11';
 import Page12 from '../components/Page12';
-import UserList from '../components/UserList';
 import Page3 from '../components/Page3';
 import Page6 from '../components/Page6';
 import Page7 from '../components/Page7';
@@ -90,11 +89,6 @@ const MainStack = () => {
             <Stack.Screen
                 name='Page12'
                 component={Page12}
-            />
-
-            <Stack.Screen
-                name='UserList'
-                component={UserList}
             />
 
             <Stack.Screen

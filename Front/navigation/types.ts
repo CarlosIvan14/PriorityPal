@@ -12,7 +12,5 @@ export type RootStackParamList = {
     Page10: undefined;
     Page11: undefined;
     Page12: undefined;
-    UserList: undefined;
-
   };
   

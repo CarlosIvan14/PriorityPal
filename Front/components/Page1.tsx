@@ -35,6 +35,8 @@ const Page1 = () => {
           navigation.navigate('Page3'); // Redirige a Page3 si es Admin
         } else if (userRole === 'Empleado') {
           navigation.navigate('Page2'); // Redirige a Page2 si es Empleado
+        } else if (userRole === 'Lider') {
+          navigation.navigate('Page3');
         }
       } else {
         Alert.alert('Error', data.message);
