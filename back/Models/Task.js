@@ -6,6 +6,10 @@ const taskSchema = new Schema({
         type: Schema.Types.String,
         ref: 'User'
     }],
+    name: {
+        type: String,
+        required: true
+    },
     deadline: {
         type: Date,
         required: true

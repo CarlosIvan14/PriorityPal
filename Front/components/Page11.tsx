@@ -1,6 +1,17 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Button } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Button, Alert, ScrollView } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
+
+interface Area {
+  _id: string;
+  name: string;
+}
+
+interface User {
+  _id: string;
+  name: string;
+}
 
 const Page11 = () => {
   const [mode, setMode] = useState('add'); 
@@ -8,11 +19,90 @@ const Page11 = () => {
   const [description, setDescription] = useState('');
   const [dueDate, setDueDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [area, setArea] = useState('');
+  const [areas, setAreas] = useState<Area[]>([]); 
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([]); // Lista para los usuarios seleccionados
+  const [users, setUsers] = useState<User[]>([]);
 
+  useEffect(() => {
+    const obtenerAreas = async () => {
+      try {
+        const response = await fetch('http://10.0.2.2:3000/areas');
+        const areas = await response.json();
+        setAreas(areas);
+      } catch (error) {
+        Alert.alert('Error', 'No se pudieron obtener las áreas');
+        console.error('Error fetching areas:', error);
+      }
+    };
+
+    const obtenerUsuarios = async () => {
+      try {
+        const response = await fetch('http://10.0.2.2:3000/users');
+        const users = await response.json();
+        setUsers(users);
+      } catch (error) {
+        Alert.alert('Error', 'No se pudieron obtener los usuarios');
+        console.error('Error fetching users:', error);
+      }
+    };
+    
+    obtenerAreas();
+    obtenerUsuarios();
+  }, []);
+
+  // Función para crear nueva tarea
+  const handleCreateTask = async () => {
+    if (!taskName || !description || !area || !dueDate || selectedUsers.length === 0) {
+      Alert.alert('Error', 'Todos los campos son obligatorios');
+      return;
+    }
+
+    try {
+      const response = await fetch('http://10.0.2.2:3000/tasks/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id_users: selectedUsers, // Enviar usuarios seleccionados
+          name: taskName,
+          deadline: dueDate,
+          description,
+          area_id: area,
+        }),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        Alert.alert('Éxito', 'Tarea creada exitosamente');
+        setTaskName('');
+        setArea('');
+        setDescription('');
+        setSelectedUsers([]); // Limpiar usuarios seleccionados
+      } else {
+        Alert.alert('Error', data.message);
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Error en el servidor, por favor intenta más tarde.');
+      console.error('Error creating task:', error);
+    }
+  };
+
+  // Función para cambiar la fecha
   const onChangeDate = (event: any, selectedDate: Date | undefined) => {
     const currentDate = selectedDate || dueDate;
     setShowDatePicker(false);
     setDueDate(currentDate);
+  };
+
+  // Función para seleccionar o deseleccionar usuarios
+  const toggleUserSelection = (userId: string) => {
+    if (selectedUsers.includes(userId)) {
+      setSelectedUsers(selectedUsers.filter(id => id !== userId)); // Deseleccionar usuario
+    } else {
+      setSelectedUsers([...selectedUsers, userId]); // Seleccionar usuario
+    }
   };
 
   return (
@@ -31,6 +121,7 @@ const Page11 = () => {
           <Text style={styles.buttonText}>Eliminar Tarea</Text>
         </TouchableOpacity>
       </View>
+      <ScrollView style={styles.scrollContainer}>
       {mode === 'add' ? (
         <View style={styles.formContainer}>
           <Text style={styles.label}>Nombre de la tarea:</Text>
@@ -39,6 +130,9 @@ const Page11 = () => {
             placeholder="Introduce el nombre de la tarea"
             value={taskName}
             onChangeText={setTaskName}
+            autoComplete='off'
+            autoCorrect={false}
+            autoCapitalize='none'
           />
           <Text style={styles.label}>Descripción:</Text>
           <TextInput 
@@ -47,6 +141,9 @@ const Page11 = () => {
             multiline
             value={description}
             onChangeText={setDescription}
+            autoComplete='off'
+            autoCorrect={false}
+            autoCapitalize='none'
           />
           <Text style={styles.label}>Fecha de entrega:</Text>
           <TouchableOpacity onPress={() => setShowDatePicker(true)}>
@@ -62,7 +159,33 @@ const Page11 = () => {
               onChange={onChangeDate}
             />
           )}
-          <Button title="Añadir Tarea" onPress={() => {/* Lógica para añadir tarea */}} />
+          <Text style={styles.label}>Área:</Text>
+          <Picker
+            selectedValue={area}
+            style={styles.input}
+            onValueChange={(itemValue) => setArea(itemValue)}
+          >
+            <Picker.Item label="Selecciona un área" value="" />
+            {areas.map((areaItem) => (
+              <Picker.Item label={areaItem.name} value={areaItem._id} key={areaItem._id} />
+            ))} 
+          </Picker>
+
+          <Text style={styles.label}>Asignar a usuarios:</Text>
+          {users.map((user) => (
+            <TouchableOpacity
+              key={user._id}
+              onPress={() => toggleUserSelection(user._id)}
+              style={[
+                styles.userItem,
+                selectedUsers.includes(user._id) && styles.selectedUserItem, // Cambiar estilo si está seleccionado
+              ]}
+            >
+              <Text>{user.name}</Text>
+            </TouchableOpacity>
+          ))}
+
+          <Button title="Añadir Tarea" onPress={handleCreateTask} />
         </View>
       ) : (
         <View style={styles.formContainer}>
@@ -71,10 +194,14 @@ const Page11 = () => {
             style={styles.input} 
             placeholder="Buscar tarea..." 
             onChangeText={(text) => {/* Lógica para buscar tareas */}} 
+            autoCapitalize='none'
+            autoComplete='off'
+            autoCorrect={false}
           />
           <Button title="Eliminar Tarea" onPress={() => {/* Lógica para eliminar tarea */}} />
         </View>
       )}
+      </ScrollView>
     </View>
   );
 };
@@ -84,11 +211,6 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     backgroundColor: '#f0f0f0',
-  },
-  title: {
-    fontSize: 24,
-    color: '#fff',
-    fontWeight: 'bold',
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -131,7 +253,20 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     textAlign: 'center',
   },
-
+  userItem: {
+    padding: 10,
+    backgroundColor: '#ffffff',
+    borderRadius: 5,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#ccc',
+  },
+  selectedUserItem: {
+    backgroundColor: '#d3f3d3',
+  },
+  scrollContainer: {
+    flex: 1,
+  },
 });
 
 export default Page11;
