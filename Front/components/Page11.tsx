@@ -1,7 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Button, Alert, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Button, Alert, ScrollView} from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../navigation/types';
+
+type Page12ScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Page12'>;
 
 interface Area {
   _id: string;
@@ -13,6 +18,12 @@ interface User {
   name: string;
 }
 
+interface Task {
+  _id: string;
+  name: string;
+
+}
+
 const Page11 = () => {
   const [mode, setMode] = useState('add'); 
   const [taskName, setTaskName] = useState('');
@@ -21,8 +32,11 @@ const Page11 = () => {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [area, setArea] = useState('');
   const [areas, setAreas] = useState<Area[]>([]); 
-  const [selectedUsers, setSelectedUsers] = useState<string[]>([]); // Lista para los usuarios seleccionados
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([]); 
   const [users, setUsers] = useState<User[]>([]);
+  const [searchResults, setSearchResults] = useState<Task[]>([]);
+  const navigation = useNavigation<Page12ScreenNavigationProp>();
+
 
   useEffect(() => {
     const obtenerAreas = async () => {
@@ -86,6 +100,59 @@ const Page11 = () => {
     } catch (error) {
       Alert.alert('Error', 'Error en el servidor, por favor intenta más tarde.');
       console.error('Error creating task:', error);
+    }
+  };
+
+  //Funcion para la busqueda fuzzy
+  const handleSearchTask = async(busqueda: string) =>{
+    setTaskName(busqueda);
+
+    if(busqueda.length>0){
+      try{
+
+        const response = await fetch(`http://10.0.2.2:3000/tasks/search?q=${busqueda}`);
+        const results = await response.json();
+        setSearchResults(results); 
+        console.log('Resultados de busqueda:', results);
+      }catch(error){
+        console.error('Error buscando tareas: ', error);
+        setSearchResults([]);
+      }
+    }else{
+      setSearchResults([]);
+    }
+
+  }
+
+  //Función para eliminar tarea
+  const handleEraseUser = async( taskToDelete: string) =>{
+    if(!taskToDelete){
+      Alert.alert('Error','Es necesario ingresar el nombre de la tarea que se desea eliminar');
+      return;
+    }
+
+    try{
+      const response = await fetch(`http://10.0.2.2:3000/tasks/deleteByName/${taskToDelete}`,{
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        Alert.alert('Éxito', 'Tarea eliminada exitosamente',[
+          { 
+            text: 'Ok', 
+            onPress: () => {
+              setTaskName('');  
+              navigation.replace('Page12');
+            }
+          }
+        ]);
+      } else {
+        const data = await response.json();
+        Alert.alert('Error', data.message);
+      }
+    }catch(error){
+      Alert.alert('Error', 'Error en el servidor, por favor intenta más tarde.');
+      console.error('Error deleting user:', error);
     }
   };
 
@@ -187,18 +254,38 @@ const Page11 = () => {
 
           <Button title="Añadir Tarea" onPress={handleCreateTask} />
         </View>
-      ) : (
+      ): (
         <View style={styles.formContainer}>
           <Text style={styles.label}>Buscar Tarea:</Text>
           <TextInput 
             style={styles.input} 
-            placeholder="Buscar tarea..." 
-            onChangeText={(text) => {/* Lógica para buscar tareas */}} 
+            placeholder="Buscar tarea..."  
             autoCapitalize='none'
             autoComplete='off'
             autoCorrect={false}
+            onChangeText={(text) => {
+              setTaskName(text);
+              handleSearchTask(text);
+            }}
           />
-          <Button title="Eliminar Tarea" onPress={() => {/* Lógica para eliminar tarea */}} />
+
+          {searchResults.length > 0 && (
+            <View style={styles.resultContainer}>
+              {searchResults.map((task) => (
+              <TouchableOpacity 
+              key={task._id} 
+              onPress={() => {
+                handleEraseUser(task.name);
+              }}
+              >
+                <Text style={styles.resultItem}>{task.name}</Text>
+              </TouchableOpacity>
+            ))}
+            </View>
+          )}
+
+          <Button title="Eliminar Tarea" onPress={() => handleEraseUser(taskName)} 
+            />
         </View>
       )}
       </ScrollView>
@@ -266,6 +353,23 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     flex: 1,
+  },
+  resultContainer: {
+    backgroundColor: '#ffffff',
+    borderRadius: 5,
+    padding: 10,
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    maxHeight: 150,
+    overflow: 'scroll', 
+  },
+  resultItem: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+    fontSize: 16,
+    color: '#333',
   },
 });
 
