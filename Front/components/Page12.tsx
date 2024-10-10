@@ -1,6 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Button, Alert, ScrollView } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../navigation/types';
+
+type Page12ScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Page12'>;
+
 
 interface Area {
   _id: string;
@@ -21,6 +27,8 @@ const Page12 = () => {
   const [name,setName ]= useState('');
   const [areas, setAreas] = useState<Area[]>([]);  
   const [searchResults, setSearchResults] = useState<User[]>([]);
+  const navigation = useNavigation<Page12ScreenNavigationProp>();
+
 
   useEffect(() =>{
     const obtenerAreas = async () =>{
@@ -77,7 +85,6 @@ const Page12 = () => {
   };
 
   //Funcion para la busqueda fuzzy
-
   const handleSearchUser = async(busqueda: string) =>{
     setUsername(busqueda);
 
@@ -99,6 +106,7 @@ const Page12 = () => {
 
   //Función para elimnar usuario
   const handleEraseUser =  async( usernameToDelete: string) =>{
+    
     if(!usernameToDelete){
       Alert.alert('Error','Es necesario ingresar el nombre de usuario que se desea eliminar');
       return;
@@ -112,8 +120,15 @@ const Page12 = () => {
       const data = await response.json();
 
       if(response.ok){
-        Alert.alert('Éxito', 'Usuario eliminado exitosamente')
-        setUsername('');
+        Alert.alert('Éxito', 'Usuario eliminado exitosamente', [
+          { 
+            text: 'Ok', 
+            onPress: () => {
+              setUsername('');  
+              navigation.replace('Page12');
+            }
+          }
+        ]);
       }else{
         Alert.alert('Error', data.message)
       }
@@ -221,9 +236,9 @@ const Page12 = () => {
           />
           {searchResults.length > 0 && (
             <View style={styles.resultContainer}>
-              {searchResults.map((user) => (
-              <TouchableOpacity key={user._id} onPress={() => handleEraseUser(user.username)}>
-                <Text style={styles.resultItem}>{user.name} ({user.username})</Text>
+              {searchResults.map((task) => (
+              <TouchableOpacity key={task._id} onPress={() => handleEraseUser(task.username)}>
+                <Text style={styles.resultItem}>{task.name} ({task.username})</Text>
               </TouchableOpacity>
             ))}
             </View>
@@ -288,7 +303,6 @@ const styles = StyleSheet.create({
     maxHeight: 150,
     overflow: 'scroll', 
   },
-  
   resultItem: {
     padding: 10,
     borderBottomWidth: 1,
