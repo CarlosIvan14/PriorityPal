@@ -15,7 +15,7 @@ const Page8 = () => {
   const [task, setTask] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<any[]>([]); // Estado para almacenar los usuarios
-
+  console.log(user.area)
   // Hacer fetch de la tarea usando taskId
   useEffect(() => {
     const fetchTask = async () => {
@@ -66,8 +66,8 @@ const Page8 = () => {
         <Text style={styles.noTaskText}>No se encontró la tarea.</Text>
       )}
        <View style={styles.userListContainer}>
-        <ScrollView style={styles.scrollTasks}>
-        <Text style={styles.taskUsersTitle}>Usuarios asignados:</Text>
+       <Text style={styles.taskUsersTitle}>Usuarios asignados:</Text>
+        <ScrollView style={styles.scrollTasks} contentContainerStyle={{ flexGrow: 1 }}>
             {users.length > 0 ? (
               users.map((user) => (
                 <View key={user._id} style={styles.userItem}>
@@ -86,7 +86,7 @@ const Page8 = () => {
       <TouchableOpacity
         testID="go-to-page7"
         style={styles.button}
-        onPress={() => navigation.navigate('Page7')}
+        onPress={() => navigation.navigate('Page7',{areaId:user.area})}
       >
         <Text style={styles.buttonText}>Ver todas las tareas del equipo</Text>
       </TouchableOpacity>
@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
   },
   button: {
     marginVertical: 20,
-    backgroundColor: '#9D9D9E',
+    backgroundColor: '#1E2F57',
     padding: 10,
     borderRadius: 8,
   },
@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
   userItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#30AFAF',
+    backgroundColor: '#1E2F57',
     marginBottom: 10,
     padding: 10,
     borderRadius: 10,

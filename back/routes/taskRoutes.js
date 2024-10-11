@@ -116,6 +116,21 @@ router.get('/getByAreaName/:areaName', async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 });
+// Obtener tareas por ID de área
+router.get('/getByAreaId/:areaId', async (req, res) => {
+    try {
+        // Busca las tareas asociadas al área directamente por el area_id
+        const tasks = await TaskModel.find({ area_id: req.params.areaId }).populate('area_id');
+
+        if (!tasks || tasks.length === 0) {
+            return res.status(404).json({ message: 'No se encontraron tareas para esta área' });
+        }
+
+        res.status(200).json(tasks);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
 
 
 // Eliminar una tarea por nombre
