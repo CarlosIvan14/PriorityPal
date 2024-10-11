@@ -50,7 +50,7 @@ const Page3 = () => {
                         </TouchableOpacity>
                     )}
                     {user?.role !== 'Lider' && (
-                        <TouchableOpacity testID="go-to-page65" style={styles.button} onPress={() => navigation.navigate('Page6')}>
+                        <TouchableOpacity testID="go-to-page6" style={styles.button} onPress={() => navigation.navigate('Page6')}>
                             <Text style={styles.title}>
                                 Equipos
                                 {'\n'}y Areas

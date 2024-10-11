@@ -54,7 +54,7 @@ const MainStack = () => {
                 name='Page6'
                 component={Page6}
             />
-
+ 
             <Stack.Screen
                 name='Page7'
                 component={Page7}

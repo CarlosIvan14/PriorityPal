@@ -92,6 +92,7 @@ router.get('/user/:userId', async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 });
+<<<<<<< Updated upstream
 
 // Eliminar una tarea por nombre
 router.delete('/deleteByName/:name', async (req, res) => {
@@ -107,4 +108,19 @@ router.delete('/deleteByName/:name', async (req, res) => {
 });
 
 
+=======
+// Obtener una tarea por ID
+router.get('/:taskId', async (req, res) => {
+    try {
+      const task = await TaskModel.findById(req.params.taskId).populate('area_id');
+      if (!task) {
+        return res.status(404).json({ message: 'Tarea no encontrada' });
+      }
+      res.status(200).json(task);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+  
+>>>>>>> Stashed changes
 module.exports = router;

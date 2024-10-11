@@ -70,7 +70,7 @@ const Page6: React.FC = () => {
         <Text style={styles.tasksTitle}>Tareas:</Text>
         <View style={styles.tasksList}>
           {team.tasks.map((task, index) => (
-            <TouchableOpacity testID="go-to-page8" key={index} onPress={() => navigation.navigate('Page8')}>
+            <TouchableOpacity testID="go-to-page7" key={index} onPress={() => navigation.navigate('Page7')}>
               <Text style={styles.taskItem}>
                 ○ {task}
               </Text>
