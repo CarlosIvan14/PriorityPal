@@ -1,48 +1,125 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import React, { useEffect, useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Image, StyleSheet, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
-import { Icon } from 'react-native-paper';
+import axios from 'axios';
 
 type Page6NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
-const teams = [
-  { id: 1, name: 'Equipo 1', tasks: ['Tarea 1', 'Tarea 2', 'Tarea 3'] },
-  { id: 2, name: 'Equipo 2', tasks: ['Tarea 4', 'Tarea 5', 'Tarea 6'] },
-  { id: 3, name: 'Equipo 3', tasks: ['Tarea 7', 'Tarea 8', 'Tarea 9'] },
-  { id: 4, name: 'Equipo 4', tasks: ['Tarea 10', 'Tarea 11', 'Tarea 12'] },
-];
-
 const Page6: React.FC = () => {
+  const [areas, setAreas] = useState<any[]>([]);
+  const [filteredAreas, setFilteredAreas] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedTeam, setSelectedTeam] = useState<number | null>(null);
   const [showTasks, setShowTasks] = useState<boolean>(false);
+  const [newAreaName,setNewAreaName] = useState('');
+  const [newAreaDescription, setNewAreaDescription] = useState('');
   const navigation = useNavigation<Page6NavigationProp>();
 
-  const handleTeamPress = (teamId: number) => {
+  useEffect(() => {
+    // Obtener las áreas al cargar el componente
+    fetchAreas();
+  }, []);
+
+  const fetchAreas = async () => {
+    try {
+      const response = await axios.get('http://10.0.2.2:3000/areas/');
+      setAreas(response.data);
+      setFilteredAreas(response.data);
+    } catch (error) {
+      console.error('Error al obtener áreas:', error);
+    }
+  };
+
+  const handleSearch = async (text: string) => {
+    setSearchQuery(text);
+    if (text === '') {
+      setFilteredAreas(areas); // Restablecer la lista completa si no hay búsqueda
+    } else {
+      try {
+        const response = await axios.get(`http://10.0.2.2:3000/areas/search?q=${text}`);
+        setFilteredAreas(response.data);
+      } catch (error) {
+        console.error('Error en la búsqueda de áreas:', error);
+      }
+    }
+  };
+
+  const handleTeamPress = async (teamId: number) => {
     if (selectedTeam === teamId) {
       setShowTasks(!showTasks);
     } else {
       setSelectedTeam(teamId);
       setShowTasks(false); // Resetear la visualización de tareas cuando se selecciona un nuevo equipo
+
+      try{
+        const team = filteredAreas.find((t) => t._id === teamId);
+        if(team){
+          const response = await axios.get(`http://10.0.2.2:3000/tasks/getByAreaName/${team.name}`)
+          team.tasks = response.data.map((task: any) => task.name);
+          setFilteredAreas([...filteredAreas]);
+        }
+      }catch(error){
+        console.error('Error al obtener tareas del área:',error);
+      }
+    }
+  };
+
+  const handleAddArea = async () => {
+    if(!newAreaName || !newAreaDescription){
+      Alert.alert('Error', 'Por favor, complete todos los campos');
+      return;
+    }
+
+    try{
+      const response = await axios.post('http://10.0.2.2:3000/areas/',{
+        name: newAreaName,
+        description: newAreaDescription,
+      });
+      setAreas([...areas, response.data]);
+      setNewAreaName('');
+      setNewAreaDescription('');
+      Alert.alert('Éxito', 'Área agregada con éxito');
+    }catch (error){
+      console.error('Error al agregar el nuevo área', error);
+      Alert.alert('Error', 'No se pudo agregar el área');
+    }
+  };
+
+  const handleDeleteArea = async (name: string) =>{
+    try{
+      const response = await axios.delete(`http://10.0.2.2:3000/areas/deleteByName/${name}`);
+      setAreas(areas.filter(area => area.name !== name));
+      setFilteredAreas(filteredAreas.filter(area => area.name !== name));
+      Alert.alert('Éxito','Area eliminada exitosamente');
+    }catch(error){
+      console.error('Error al eliminar área:', error);
+      Alert.alert('Error', 'No se pudo eliminar el área');
     }
   };
 
   const renderTeamList = () => {
-    return teams.map((team) => (
+    return filteredAreas.map((team) => (
       <TouchableOpacity
-        key={team.id}
+        key={team._id}
         style={[
           styles.teamButton,
-          selectedTeam === team.id && styles.selectedTeamButton,
+          selectedTeam === team._id && styles.selectedTeamButton,
         ]}
-        onPress={() => handleTeamPress(team.id)}
+        onPress={() => handleTeamPress(team._id)}
       >
         <View style={styles.teamInfo}>
-        <Image source={require('../public/teams.jpg')} style={styles.Icon} />
+          <Image source={require('../public/teams.jpg')} style={styles.Icon} />
           <Text style={styles.teamName}>{team.name}</Text>
         </View>
+        <TouchableOpacity
+          style={styles.deleteButton}
+          onPress={() => handleDeleteArea(team.name)}
+        >
+          <Text style = {styles.deleteButtonText}> Eliminar</Text>
+
+        </TouchableOpacity>
       </TouchableOpacity>
     ));
   };
@@ -61,7 +138,7 @@ const Page6: React.FC = () => {
   };
 
   const renderTeamDetails = () => {
-    const team = teams.find((t) => t.id === selectedTeam);
+    const team = filteredAreas.find((t) => t._id === selectedTeam);
     if (!team || !showTasks) return null;
 
     return (
@@ -70,7 +147,7 @@ const Page6: React.FC = () => {
         <Text style={styles.tasksTitle}>Tareas:</Text>
         <View style={styles.tasksList}>
           {team.tasks.map((task, index) => (
-            <TouchableOpacity testID="go-to-page7" key={index} onPress={() => navigation.navigate('Page7')}>
+            <TouchableOpacity testID="go-to-page8" key={index} onPress={() => navigation.navigate('Page8')}>
               <Text style={styles.taskItem}>
                 ○ {task}
               </Text>
@@ -84,6 +161,30 @@ const Page6: React.FC = () => {
 
   return (
     <View style={styles.container}>
+      <TextInput
+        style={styles.searchInput}
+        placeholder="Buscar equipo"
+        value={searchQuery}
+        onChangeText={handleSearch}
+      />
+       <View style={styles.addAreaContainer}>
+        <TextInput
+          style={styles.input}
+          placeholder="Nombre del área"
+          value={newAreaName}
+          onChangeText={setNewAreaName}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Descripción del área"
+          value={newAreaDescription}
+          onChangeText={setNewAreaDescription}
+        />
+        <TouchableOpacity style={styles.addButton} onPress={handleAddArea}>
+          <Text style={styles.addButtonText}>Agregar Área</Text>
+        </TouchableOpacity>
+      </View>
+
       <ScrollView contentContainerStyle={styles.teamsContainer}>
         {renderTeamList()}
       </ScrollView>
@@ -157,6 +258,51 @@ const styles = StyleSheet.create({
     height: 55,
     marginHorizontal: 20,
   },
+  searchInput: {
+    height: 40,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    marginBottom: 15,
+    backgroundColor: '#fff',
+    fontSize: 16,
+},
+scrollContainer: {
+  flex: 1,
+},
+addAreaContainer: {
+  marginBottom: 20,
+},
+input: {
+  height: 40,
+  borderColor: '#ccc',
+  borderWidth: 1,
+  borderRadius: 5,
+  paddingHorizontal: 10,
+  marginBottom: 10,
+  backgroundColor: '#fff',
+},
+addButton: {
+  backgroundColor: '#30AFAF',
+  padding: 10,
+  borderRadius: 5,
+  alignItems: 'center',
+},
+addButtonText: {
+  color: 'white',
+  fontSize: 16,
+},
+deleteButton: {
+  backgroundColor: '#FF5733',
+  padding: 8,
+  borderRadius: 5,
+},
+deleteButtonText: {
+  color: 'white',
+  fontSize: 14,
+},
+
 });
 
 export default Page6;

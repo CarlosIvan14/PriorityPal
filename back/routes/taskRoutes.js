@@ -1,5 +1,6 @@
 const express = require('express');
 const TaskModel = require('../Models/Task');
+const AreaModel = require('../Models/Area');
 const router = express.Router();
 const mongoose = require('mongoose');
 const Fuse = require('fuse.js'); 
@@ -92,6 +93,30 @@ router.get('/user/:userId', async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 });
+
+// Obtener tareas por nombre de área
+router.get('/getByAreaName/:areaName', async (req, res) => {
+    try {
+        // Encuentra el área por nombre
+        const area = await AreaModel.findOne({ name: new RegExp(`^${req.params.areaName}$`, 'i') });
+
+        if (!area) {
+            return res.status(404).json({ message: 'Área no encontrada' });
+        }
+
+        // Busca las tareas asociadas al área encontrada
+        const tasks = await TaskModel.find({ area_id: area._id }).populate('area_id');
+
+        /* if (tasks.length === 0) {
+            return res.status(404).json({ message: 'No se encontraron tareas para esta área' });
+        } */
+
+        res.status(200).json(tasks);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 
 // Eliminar una tarea por nombre
 router.delete('/deleteByName/:name', async (req, res) => {
