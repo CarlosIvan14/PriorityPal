@@ -91,5 +91,19 @@ router.delete('/deleteByName/:name', async (req,res) => {
     }
 });
 
+// Obtener un área por id
+router.get('/:id', async (req, res) => {
+    try {
+        const area = await AreaModel.findById(req.params.id);
+        
+        if (!area) {
+            return res.status(404).json({ message: 'Área no encontrada' });
+        }
+        
+        res.status(200).json(area);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+});
 
 module.exports = router;
