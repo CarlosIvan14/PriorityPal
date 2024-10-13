@@ -129,7 +129,7 @@ const Page8 = () => {
           <Text style={styles.buttonText1}>Ver todas las tareas del equipo</Text>
         </TouchableOpacity>
       )}
-      {user?.role !== 'Admin' && (
+      {(user?.role !== 'Admin'&& task.status !== 'Finalizada') && (
         <TouchableOpacity
           testID="Actualizarstatus"
           style={styles.button1}

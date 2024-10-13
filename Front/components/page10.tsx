@@ -1,16 +1,56 @@
-import React, { useState } from 'react'
-import { View, Text, Image, Pressable, StyleSheet,  FlatList } from 'react-native'
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, Pressable } from 'react-native';
 import { useUser } from './UserContext';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../navigation/types';
 
+type UserListNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 export default function Page10() {
   const { user } = useUser();
-  const [tasks, setTasks] = useState([
-    { id: '1', title: 'Tarea 1' },
-    { id: '2', title: 'Tarea 2' },
-    { id: '3', title: 'Tarea 3' },
+  const [tasks, setTasks] = useState<any[]>([]); // Estado para almacenar las tareas del usuario
+  const [area, setArea] = useState<any>(null); 
+  const navigation = useNavigation<UserListNavigationProp>();
+  const areauser = user.area
+  // Fetch de tareas
+  useEffect(() => {
+    const fetchUserTasks = async () => {
+      if (user && user._id) { // Verifica que el usuario y su ID existan
+        try {
+          const response = await fetch(`http://10.0.2.2:3000/tasks/user/${user._id}`); // Llama al endpoint para obtener tareas
+          const data = await response.json();
+          console.log(data);
+          setTasks(data); // Establece las tareas del usuario en el estado
+        } catch (error) {
+          console.error('Error fetching tasks:', error);
+        }
+      }
+    };
 
-  ]);
+    fetchUserTasks(); // Llama a la función para obtener las tareas
+  }, [user]); 
+   // Fetch del área del usuario
+    // Fetch del área del usuario
+    useEffect(() => {
+      const fetchUserArea = async () => {
+        console.log(areauser)
+        if (areauser) { // Verifica que el usuario y su ID existan
+          try {
+            const response = await fetch(`http://10.0.2.2:3000/areas/${areauser}`); // Llama al endpoint para obtener el área
+            if (!response.ok) {
+              throw new Error('Área no encontrada');
+            }
+            const areaData = await response.json();
+            console.log('Área del usuario:', areaData);
+            setArea(areaData); // Establece el área del usuario en el estado
+          } catch (error) {
+            console.error('Error fetching area:', error);
+          }
+        }
+      };
   
+      fetchUserArea(); // Llama a la función para obtener el área
+    }, [user]); 
   
   return (
     <View style={styles.container}>
@@ -27,10 +67,12 @@ export default function Page10() {
       {/* Information Boxes */}
       <View style={styles.infoContainer}>
         <View style={styles.infoBox}>
-          <Text style={styles.infoText}>Equipo</Text>
+          <Text style={styles.infoText}>Equipo:</Text>
+          <Text style={styles.infoText}>{area?.name}</Text>
         </View>
         <View style={styles.infoBox}>
-          <Text style={styles.infoText}>Miembro desde</Text>
+        <Text style={styles.infoText}>Username:</Text>
+          <Text style={styles.infoText}>{user?.username}</Text>
         </View>
       </View>
 
@@ -38,16 +80,21 @@ export default function Page10() {
       <View style={styles.tasksContainer}>
         <Text style={styles.tasksTitle}>Tareas</Text>
         
-        {/* Dynamic Task List */}
-        <FlatList
-          data={tasks}
-          keyExtractor={item => item.id}
-          renderItem={({ item }) => (
-            <View style={styles.taskItem}>
-              <Text style={styles.taskText}>{item.title}</Text>
-            </View>
-          )}
-        />
+       {/* Sección para mostrar las tareas */}
+        {tasks.length > 0 ? (
+          <ScrollView style={styles.scrollTasks} contentContainerStyle={styles.scrollContent}>
+            {tasks.map((task, index) => (
+              <View key={task._id} style={styles.taskItem}>
+                <TouchableOpacity testID="go-to-page8" key={index} onPress={() => navigation.navigate('Page8', { taskId: task._id })}>
+                  <Text style={styles.taskName}>{task.name}</Text>
+                </TouchableOpacity>
+              </View>
+            ))}
+          </ScrollView>
+        ) : (
+          <Text style={styles.noTasksText}>No hay tareas disponibles</Text>
+        )}
+    
       </View>
 
       {/* Download Button with Pressable */}
@@ -75,13 +122,38 @@ export default function Page10() {
 
 const styles = StyleSheet.create({
   container: {
-   
     width: '100%',
     height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
-
     backgroundColor: '#fff',
+  },
+  taskListContainer: {
+    width: '100%',
+    backgroundColor: '#9D9D9E',
+    padding: 10,
+    borderRadius: 10,
+  },
+  scrollTasks: {
+    maxHeight: 200, // Altura máxima de 200 px para la lista de tareas
+  },
+  taskItem: {
+    backgroundColor: '#1E2F57',
+    marginBottom: 10,
+    padding: 10,
+    borderRadius: 10,
+  },
+  taskName: {
+    color: '#fff',
+    fontSize: 16,
+  },
+  noTasksText: {
+    color: '#fff',
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  scrollContent: {
+    paddingBottom: 10, // Añadir algo de padding inferior para evitar cortar el último elemento
   },
   profileContainer: {
     alignItems: 'center',
@@ -140,9 +212,6 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     justifyContent: 'center',
     
-  },
-  taskItem: {
-    // Define the style for individual task items
   },
   downloadButton: {
     backgroundColor: '#30AFAF',

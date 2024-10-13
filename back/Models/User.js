@@ -1,4 +1,4 @@
-const { Schema, model, models } = require('mongoose');
+const { Schema, model, models, default: mongoose } = require('mongoose');
 
 // Modelo para el usuario
 const userSchema = new Schema({
@@ -26,7 +26,29 @@ const userSchema = new Schema({
         type: Schema.Types.ObjectId, 
         ref: 'Area',
         required: true
-    }
+    },
+    requests:[{
+        from:{
+            type:mongoose.Schema.Types.ObjectId,
+            ref:"User",
+            required: true
+        },
+        message:{
+            type: String,
+            required: true,
+        },
+        status:{
+            type:String,
+            enum:["pendiente","aceptada","rechazada"],
+            default: "pendiente"
+        }
+    }],
+    friends:[
+        {
+            type:mongoose.Schema.Types.ObjectId,
+            ref: "User",
+        }
+    ]
 }, {
     timestamps: true
 });

@@ -14,7 +14,7 @@ import Page7 from '../components/Page7';
 import Page8 from '../components/Page8';
 import Page9 from '../components/Page9';
 import Page10 from '../components/page10';
-
+import PeopleScreen from '../components/People'
 const Stack = createNativeStackNavigator()
 
 const MainStack = () => {
@@ -96,6 +96,11 @@ const MainStack = () => {
                 component={Page1}
             />
             
+            <Stack.Screen
+                name='People'
+                component={PeopleScreen}
+            />
+
             </Stack.Navigator>
   );
 };

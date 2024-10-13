@@ -1,11 +1,22 @@
 import React from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, KeyboardAvoidingView } from 'react-native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../navigation/types';
+import { useUser } from './UserContext'; // Importa el hook
+
+type Page9_1NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Page9_1'>;
+type Page9_1RouteProp = RouteProp<RootStackParamList, 'Page9_1'>;
 
 export default function Page9_1() {
+  const navigation = useNavigation<Page9_1NavigationProp>();
+  const route = useRoute<Page9_1RouteProp>();
+  const { name,receiverId } = route.params;
+  const { user } = useUser();
+
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Ing. Fernanda</Text>
-
+      <Text style={styles.header}>{name}</Text>
       <View style={styles.messagesContainer}>
         <Text style={styles.messageReceived}>Holis, estas libre a las 4 swetiee?</Text>
         <Text style={styles.messageSent}>Holi, Sweetie</Text>

@@ -153,4 +153,18 @@ router.get('/area/:areaId', async (req, res) => {
     }
 });
 
+//Mandar un request de mensaje
+router.post('/sendrequest', async (req,res) =>{
+    const {senderId,receiverId,message} = req.body;
+
+    const receiver = await UserModel.findById(receiverId)
+    if(!receiver){
+        return res.status(404).json({message:'Receiver not found'});
+    };
+
+    receiver.request.push({from:senderId,message})
+    await receiver.save();
+    
+    res.status(200).json({message:'Request sent succesfully'});
+})
 module.exports = router;

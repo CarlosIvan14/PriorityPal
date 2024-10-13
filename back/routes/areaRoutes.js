@@ -90,10 +90,9 @@ router.delete('/deleteByName/:name', async (req,res) => {
         res.status(400).json({message: error.message});
     }
 });
-
-// Obtener un área por id
 router.get('/:id', async (req, res) => {
     try {
+        console.log('ID recibido:', req.params.id);
         const area = await AreaModel.findById(req.params.id);
         
         if (!area) {
@@ -102,8 +101,10 @@ router.get('/:id', async (req, res) => {
         
         res.status(200).json(area);
     } catch (error) {
-        res.status(400).json({ message: error.message });
-    }
+        console.error('Error en el servidor:', error.message);
+        res.status(400).json({ message: error.message });
+    }
 });
+
 
 module.exports = router;

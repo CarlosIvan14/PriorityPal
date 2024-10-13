@@ -1,9 +1,11 @@
-import React from 'react';
-import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, SafeAreaView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
-
+import AntDesign from 'react-native-vector-icons/AntDesign';
+import Entypo from 'react-native-vector-icons/Entypo';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 type Page9NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const messages = [
@@ -13,18 +15,64 @@ const messages = [
 
 export default function Page9() {
   const navigation = useNavigation<Page9NavigationProp>();
-
+  const[options,setOptions] =useState(['Chats']);
+  const[chats,setChats] =useState([]);
+  const[request,setRequests] =useState([]);
+  const chooseOption = (option: string) => {
+    if (options.includes(option)) {
+      setOptions(options.filter(c => c !== option));
+    } else {
+      setOptions([...options, option]);
+    }
+  };
+  
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Chat de equipo</Text>
+      <SafeAreaView>
+        <View style={{ padding: 10, flexDirection: 'row', alignItems: 'center', gap: 10, justifyContent: 'space-between' }}>
+          <Text style={styles.title}>Chats</Text>
+          <View>
+            <View style={{flexDirection:'row',alignItems:'center',gap:10}}>
+              <AntDesign name="camerao" size={26} color="black" />
+              <MaterialIcons onPress={() => navigation.navigate('People')} name="person-outline" size={26} color="black" />
+            </View>
+          </View>
+        </View>
+        <View style={{padding:10}}>
+        <TouchableOpacity style={{flexDirection:'row',alignItems:'center',justifyContent:'space-between'}} onPress={() => chooseOption("Chats")}>
+            <View>
+              <Text>Chats</Text>
+            </View>
+            <Entypo name="chevron-small-down" size={26} color="black"/>
+          </TouchableOpacity>
+          <View>
+            {options?.includes("Chats") && (chats?.length > 0 ?  (
+              <View>
 
+              </View>
+            ) : (
+              <View style={{ height: 300, justifyContent: 'center', alignItems:'center'}}>
+                <View>
+                  <Text style={{textAlign: 'center', color: 'gray'}}>No tienes chats aun</Text>
+                  <Text style={{marginTop: 4, color: 'gray'}}>Crea uno mandando un mensaje a otro usuario</Text>
+                </View>
+              </View>
+            ))}
+          </View>
+          <TouchableOpacity style={{flexDirection:'row',alignItems:'center',justifyContent:'space-between'}} onPress={() => chooseOption("Requests")}>
+            <View>
+              <Text>Solicitudes</Text>
+            </View>
+            <Entypo name="chevron-small-down" size={26} color="black"/>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
       <FlatList
         data={messages}
         keyExtractor={item => item.id}
         renderItem={({ item }) => (
-          <TouchableOpacity 
-            style={styles.messageContainer} 
-            onPress={() => navigation.navigate('Page9_1')}
+          <TouchableOpacity
+            style={styles.messageContainer}
           >
             <Image source={{ uri: item.img }} style={styles.avatar} />
             <View>

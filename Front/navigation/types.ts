@@ -8,9 +8,10 @@ export type RootStackParamList = {
     Page7: { areaId: string }; 
     Page8: { taskId: string }; 
     Page9: undefined;
-    Page9_1: undefined;
+    Page9_1: { name: string , receiverId: string}; 
     Page10: undefined;
     Page11: undefined;
     Page12: undefined;
+    People: undefined;
   };
   
