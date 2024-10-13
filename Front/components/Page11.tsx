@@ -84,6 +84,8 @@ const Page11 = () => {
           deadline: dueDate,
           description,
           area_id: area,
+          status: "Pendiente",
+          progress: 0,
         }),
       });
 

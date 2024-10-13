@@ -1,9 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  Modal,
+  TextInput,
+} from 'react-native';
+import { Picker } from '@react-native-picker/picker';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 import { useUser } from './UserContext'; // Importa el hook
+import { Alert } from 'react-native';
+
 type Page8NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Page8'>;
 type Page8RouteProp = RouteProp<RootStackParamList, 'Page8'>;
 
@@ -14,9 +25,11 @@ const Page8 = () => {
   const { user } = useUser();
   const [task, setTask] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [users, setUsers] = useState<any[]>([]); // Estado para almacenar los usuarios
-  console.log(user.area)
-  // Hacer fetch de la tarea usando taskId
+  const [users, setUsers] = useState<any[]>([]);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [status, setStatus] = useState('Pendiente');
+  const [progress, setProgress] = useState(0);
+
   useEffect(() => {
     const fetchTask = async () => {
       try {
@@ -24,14 +37,13 @@ const Page8 = () => {
         const data = await response.json();
         setTask(data);
 
-        // Hacer fetch de los usuarios usando sus IDs
         const userPromises = data.id_users.map(async (userId: string) => {
           const userResponse = await fetch(`http://10.0.2.2:3000/users/${userId}`);
           return userResponse.json();
         });
 
-        const usersData = await Promise.all(userPromises); // Esperar a que todas las llamadas terminen
-        setUsers(usersData); // Guardar los detalles de los usuarios
+        const usersData = await Promise.all(userPromises);
+        setUsers(usersData);
       } catch (error) {
         console.error('Error fetching task or users:', error);
       } finally {
@@ -41,6 +53,34 @@ const Page8 = () => {
 
     fetchTask();
   }, [taskId]);
+
+  const handleUpdateTask = async () => {
+    // Validar que los campos sean correctos antes de proceder
+    if ((progress === 0 && status !== 'Pendiente') || (progress === 100 && status !== 'Finalizada')) {
+      Alert.alert('Error', 'La combinación de progreso y estado no es válida.'); // Cambia alert por Alert.alert
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://10.0.2.2:3000/tasks/${taskId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status, progress }),
+      });
+
+      if (response.ok) {
+        const updatedTask = await response.json();
+        setTask(updatedTask);
+        setModalVisible(false); // Cerrar el modal
+      } else {
+        console.error('Error updating task');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
 
   if (loading) {
     return (
@@ -55,47 +95,143 @@ const Page8 = () => {
       <Text style={styles.title}>Detalles de la Tarea:</Text>
       {task ? (
         <View style={styles.iconPlaceholder}>
-            <Text style={styles.taskDescription1}>Nombre:</Text>
-            <Text style={styles.taskName}>{task.name}</Text>
-            <Text style={styles.taskDescription1}>Descripción:</Text>
-            <ScrollView style={styles.scrollTasks} contentContainerStyle={{ flexGrow: 1 }}>
-              <Text style={styles.taskDescription}>{task.description}</Text>
-            </ScrollView>
+          <Text style={styles.taskDescription1}>Nombre:</Text>
+          <Text style={styles.taskName}>{task.name}</Text>
+          <Text style={styles.taskDescription1}>Descripción:</Text>
+          <ScrollView style={styles.scrollTasks} contentContainerStyle={{ flexGrow: 1 }}>
+            <Text style={styles.taskDescription}>{task.description}</Text>
+          </ScrollView>
         </View>
       ) : (
         <Text style={styles.noTaskText}>No se encontró la tarea.</Text>
       )}
-       <View style={styles.userListContainer}>
-       <Text style={styles.taskUsersTitle}>Usuarios asignados:</Text>
+      <View style={styles.userListContainer}>
+        <Text style={styles.taskUsersTitle}>Usuarios asignados:</Text>
         <ScrollView style={styles.scrollTasks} contentContainerStyle={{ flexGrow: 1 }}>
-            {users.length > 0 ? (
-              users.map((user) => (
-                <View key={user._id} style={styles.userItem}>
-                  <View style={styles.avatar} />
-                  <Text  style={styles.userName}>  {/* Agregar key aquí */}
-                    {user.name}
-                  </Text>
-                </View>
-              ))
-            ) : (
-              <Text style={styles.userName}>No se encontraron usuarios.</Text>
-            )}
+          {users.length > 0 ? (
+            users.map((user) => (
+              <View key={user._id} style={styles.userItem}>
+                <View style={styles.avatar} />
+                <Text style={styles.userName}>{user.name}</Text>
+              </View>
+            ))
+          ) : (
+            <Text style={styles.userName}>No se encontraron usuarios.</Text>
+          )}
         </ScrollView>
       </View>
-      {user?.role == 'Lider' && (
-      <TouchableOpacity
-        testID="go-to-page7"
-        style={styles.button}
-        onPress={() => navigation.navigate('Page7',{areaId:user.area})}
-      >
-        <Text style={styles.buttonText}>Ver todas las tareas del equipo</Text>
-      </TouchableOpacity>
+      {user?.role !== 'Empleado' && (
+        <TouchableOpacity
+          testID="go-to-page7"
+          style={styles.button1}
+          onPress={() => navigation.navigate('Page7', { areaId: user.area })}
+        >
+          <Text style={styles.buttonText1}>Ver todas las tareas del equipo</Text>
+        </TouchableOpacity>
       )}
+      {user?.role !== 'Admin' && (
+        <TouchableOpacity
+          testID="Actualizarstatus"
+          style={styles.button1}
+          onPress={() => setModalVisible(true)}
+        >
+          <Text style={styles.buttonText1}>Actualizar estatus de la tarea</Text>
+        </TouchableOpacity>
+      )}
+
+      {/* Modal para actualizar la tarea */}
+      <Modal visible={modalVisible} animationType="slide" transparent={true}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Actualizar Estado de la Tarea</Text>
+            <Picker
+              selectedValue={status}
+              onValueChange={(value) => setStatus(value)}
+              style={styles.picker}
+            >
+              <Picker.Item label="Pendiente" value="Pendiente" />
+              <Picker.Item label="En Progreso" value="En Progreso" />
+              <Picker.Item label="Finalizada" value="Finalizada" />
+            </Picker>
+            <TextInput
+              style={styles.input}
+              keyboardType="numeric"
+              placeholder="Progreso (0-100)"
+              maxLength={3}
+              value={progress.toString()}
+              onChangeText={(value) => {
+                const numericValue = Math.max(0, Math.min(100, parseInt(value, 10) || 0));
+                setProgress(numericValue);
+              }}
+            />
+            <TouchableOpacity style={styles.button} onPress={handleUpdateTask}>
+              <Text style={styles.buttonText}>Guardar Cambios</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.button, styles.cancelButton]} onPress={() => setModalVisible(false)}>
+              <Text style={styles.buttonText}>Cancelar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    width: '80%',
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 20,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  label: {
+    fontSize: 16,
+    marginBottom: 5,
+  },
+  picker: {
+    height: 50,
+    width: '100%',
+    marginBottom: 15,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    padding: 10,
+    marginBottom: 15,
+    width: '100%',
+    textAlign: 'center',
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  button: {
+    backgroundColor: '#1E2F57',
+    padding: 10,
+    borderRadius: 5,
+    marginHorizontal: 5,
+  },
+  cancelButton: {
+    backgroundColor: '#FF0000',
+  },
+  buttonText: {
+    color: '#fff',
+    textAlign: 'center',
+    fontWeight: 'bold',
+  },
   container: {
     flex: 1,
     padding: 20,
@@ -106,7 +242,7 @@ const styles = StyleSheet.create({
   },
   userListContainer: {
     width: '100%',
-    marginTop: 40,
+    marginTop: 20,
     backgroundColor: '#9D9D9E',
     padding: 10,
     borderRadius: 10,
@@ -118,8 +254,8 @@ const styles = StyleSheet.create({
     color: '#fff',
     textAlign: 'center',
   },
-  button: {
-    marginVertical: 20,
+  button1: {
+    marginVertical: 10,
     backgroundColor: '#1E2F57',
     padding: 10,
     borderRadius: 8,
@@ -131,7 +267,7 @@ const styles = StyleSheet.create({
   scrollTasks: {
     maxHeight: 200, // Altura máxima de 200 px para la lista de tareas
   },
-  buttonText: {
+  buttonText1: {
     color: '#fff',
     textAlign: 'center',
     fontWeight: 'bold',

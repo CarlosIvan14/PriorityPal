@@ -22,6 +22,14 @@ const taskSchema = new Schema({
         type: Schema.Types.String,
         ref: 'Area',
         required: true
+    },
+    status:{
+        type: String,
+        require: true,
+    },
+    progress:{
+        type: Number,
+        required: true
     }
 }, {
     timestamps: true

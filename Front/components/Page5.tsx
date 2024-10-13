@@ -59,7 +59,7 @@ const Page5 = () => {
               <TouchableOpacity 
                 key={user._id}
                 style={styles.userItem}
-                onPress={() => navigation.navigate('Page4')}
+                onPress={() => navigation.navigate('Page4', { userId: user._id })} // Pasar el ID del usuario aquí
               >
                 <View key={index} style={styles.userItem}>
                   <View style={styles.avatar} />

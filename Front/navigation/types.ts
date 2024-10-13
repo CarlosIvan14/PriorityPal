@@ -2,7 +2,7 @@ export type RootStackParamList = {
     Page1: undefined;
     Page2: undefined;
     Page3: undefined;
-    Page4: undefined;
+    Page4:  { userId: string }; 
     Page5: undefined;
     Page6: undefined;
     Page7: { areaId: string }; 

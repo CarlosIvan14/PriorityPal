@@ -45,7 +45,12 @@ router.get('/', async (req, res) => {
 
 // Crear una nueva tarea
 router.post('/', async (req, res) => {
-    const { id_users, name, deadline, description, area_id } = req.body;
+    const { id_users, name, deadline, description, area_id, status, progress } = req.body;
+
+    // Validar los campos requeridos
+    if (!id_users || !name || !deadline || !description || !area_id || !status || progress === undefined) {
+        return res.status(400).json({ message: 'Todos los campos son requeridos' });
+    }
 
     try {
         const newTask = new TaskModel({
@@ -53,7 +58,9 @@ router.post('/', async (req, res) => {
             name,
             deadline,
             description,
-            area_id
+            area_id,
+            status,
+            progress
         });
 
         const savedTask = await newTask.save();
