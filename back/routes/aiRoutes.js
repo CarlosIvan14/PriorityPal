@@ -1,9 +1,7 @@
 const express = require('express');
-const router = express.Router();  // Aquí defines el enrutador
-const mongoose = require('mongoose');
 const TaskModel = require('../Models/Task');
 const AreaModel = require('../Models/Area');
-const User = require('../Models/User');
+const UserModel = require('../Models/User'); 
 const OpenAI = require('openai');
 const dotenv = require('dotenv');
 const path = require('path');
@@ -16,86 +14,56 @@ const openai = new OpenAI({
     apiKey: process.env.OPENAI_KEY
 });
 
-// Crear una nueva tarea y asignarla automáticamente usando ChatGPT
-router.post('/assignAutomatically', async (req, res) => {
-    const { name, description, deadline, area_id } = req.body;
+const router = express.Router();
 
-    if (!name || !description || !deadline || !area_id) {
-        return res.status(400).json({ message: 'Todos los campos son obligatorios' });
-    }
+// Endpoint para analizar y asignar tarea al usuario con menor carga
+router.post('/assign-task', async (req, res) => {
+    const { areaId, taskDetails } = req.body;
 
     try {
-        // Convertir el area_id a ObjectId si no lo es
-        const objectId = mongoose.Types.ObjectId.isValid(area_id) ? mongoose.Types.ObjectId(area_id) : null;
-
-        if (!objectId) {
-            return res.status(400).json({ message: 'El ID del área no es válido.' });
+        // Verificar si el área existe
+        const area = await AreaModel.findById(areaId);
+        if (!area) {
+            return res.status(404).json({ message: 'Área no encontrada' });
         }
 
-        // Obtener todos los usuarios del área específica
-        const area = await AreaModel.findById(objectId).populate('users');
-        const users = area?.users || [];
-
+        // Obtener los usuarios de esa área
+        const users = await UserModel.find({ area: areaId });
         if (users.length === 0) {
-            return res.status(404).json({ message: 'No hay usuarios disponibles en esta área' });
+            return res.status(404).json({ message: 'No se encontraron usuarios en esta área' });
         }
 
-        // Obtener la cantidad de tareas asignadas a cada usuario
-        const usersWithTaskCount = await Promise.all(users.map(async (user) => {
-            const taskCount = await TaskModel.countDocuments({ id_users: user._id });
-            return { name: user.name, taskCount };
-        }));
+        // Obtener las tareas de cada usuario en el área
+        const tasks = await TaskModel.find({ area_id: areaId });
 
-        // Crear el prompt para ChatGPT
+        // Agrupar tareas por usuario
+        const userTaskCount = users.map(user => {
+            const taskCount = tasks.filter(task => task.id_users.includes(user._id.toString())).length;
+            return { user, taskCount };
+        });
+
+        // Llamada a OpenAI para decidir el usuario con menos carga
         const prompt = `
-            Asigna la siguiente tarea a uno de los usuarios en el área de trabajo de forma justa.
-            Aquí están los detalles de la tarea:
-            - Nombre: ${name}
-            - Descripción: ${description}
-            - Fecha límite: ${deadline}
-
-            Aquí está la lista de usuarios con la cantidad de tareas que tienen:
-            ${usersWithTaskCount.map(u => `- ${u.name}: ${u.taskCount} tareas`).join('\n')}
+            Estos son los usuarios y su carga de tareas:
+            ${userTaskCount.map(ut => `${ut.user.name}: ${ut.taskCount} tareas`).join('\n')}
             
-            Por favor asigna la tarea al usuario con menos tareas.
+            Basado en esta información, ¿a qué usuario deberíamos asignar la siguiente tarea?, solo regresame el ID del usuario
+            Tarea: ${taskDetails.name}, Descripción: ${taskDetails.description}, Deadline: ${taskDetails.deadline}.
         `;
 
-        // Enviar solicitud a OpenAI
         const completion = await openai.chat.completions.create({
-            model: 'gpt-4',
-            messages: [
-                { role: 'system', content: 'Eres un experto en gestión de tareas y asignaciones de trabajo.' },
-                { role: 'user', content: prompt }
-            ]
+            model: 'gpt-3.5-turbo',
+            messages: [{ role: 'user', content: prompt }]
         });
 
-        // Obtener el nombre del usuario al que se le asignará la tarea
-        const assignmentResponse = completion.choices[0].message.content;
-        const assignedUserName = assignmentResponse.match(/Asignar a: (\w+)/i)[1];
+        // Respuesta de OpenAI
+        const aiResponse = completion.choices[0].message.content;
 
-        // Buscar el usuario por nombre
-        const assignedUser = users.find(user => user.name === assignedUserName);
-
-        if (!assignedUser) {
-            return res.status(404).json({ message: 'No se encontró el usuario asignado por ChatGPT' });
-        }
-
-        // Crear nueva tarea con el usuario asignado
-        const newTask = new TaskModel({
-            id_users: [assignedUser._id],
-            name,
-            description,
-            deadline,
-            area_id: objectId
-        });
-
-        const savedTask = await newTask.save();
-        res.status(201).json(savedTask);
+        res.status(200).json({ message: `Asignación recomendada por AI: ${aiResponse}` });
     } catch (error) {
-        console.error('Error al asignar la tarea automáticamente usando OpenAI:', error);
-        res.status(500).json({ message: 'Error en el servidor, por favor intenta más tarde.' });
+        console.error('Error al procesar la asignación:', error);
+        res.status(500).json({ message: 'Error al asignar la tarea' });
     }
 });
 
-// Exportar el router para que pueda ser usado en otros archivos
 module.exports = router;

@@ -36,6 +36,9 @@ const Page11 = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [searchResults, setSearchResults] = useState<Task[]>([]);
   const navigation = useNavigation<Page12ScreenNavigationProp>();
+  const [areaUsers, setAreaUsers] = useState<User[]>([]);
+
+  
 
 
   useEffect(() => {
@@ -174,6 +177,8 @@ const Page11 = () => {
     }
   };
 
+  //Función para asignar tarea automáticamente
+
   return (
     <View style={styles.container}>
       <View style={styles.buttonContainer}>
@@ -263,7 +268,7 @@ const Page11 = () => {
 
             <TouchableOpacity 
               style={[styles.button,styles.activeButton]}
-              //onPress={/*Logica para añadir tarea por IA*/}
+              //onPress={handleAutoAssignTask}
             >
               <Text style={styles.buttonText}>Asignar tarea automaticamente</Text>
             </TouchableOpacity>

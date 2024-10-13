@@ -243,9 +243,6 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
   },
-  teamsContainer: {
-    flexGrow: 1,
-  },
   teamButton: {
     backgroundColor: '#93d4d6',
     padding: 15,
@@ -374,10 +371,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   userListFullContainer: {
-    flex: 1,  // Ocupa toda la pantalla
-    backgroundColor: '#30afaf', // Fondo para toda la lista de usuarios
+    flex: 8,
+    backgroundColor: '#30afaf', 
     padding: 20, 
-    height:'80%',
+  },
+  teamsContainer: {
+    flexGrow: 2,
   },
   usersTitle: {
     fontSize: 18,
