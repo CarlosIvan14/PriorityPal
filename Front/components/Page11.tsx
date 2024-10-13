@@ -177,7 +177,51 @@ const Page11 = () => {
     }
   };
 
-  //Función para asignar tarea automáticamente
+  //Función para asiganar tarea y crear automaticamente
+  const handleAutoAssignTask = async () => {
+    if (!taskName || !description || !area || !dueDate) {
+      Alert.alert('Error', 'Todos los campos son obligatorios');
+      return;
+    }
+  
+    try {
+      const response = await fetch('http://10.0.2.2:3000/openAiRoute/assign-task', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          areaId: area,
+          taskDetails: {
+            name: taskName,
+            deadline: dueDate,
+            description,
+          },
+        }),
+      });
+  
+      const data = await response.json();
+      
+      if (response.ok) {
+        // Buscar el nombre del usuario asignado a partir de su ID
+        const assignedUser = users.find(user => user._id === data.assignedUserId);
+        const assignedUserName = assignedUser ? assignedUser.name : 'Usuario no encontrado';
+  
+        Alert.alert('Éxito', `Tarea creada y asignada automáticamente al usuario: ${assignedUserName}`);
+        // Limpiar los campos después de la asignación exitosa
+        setTaskName('');
+        setArea('');
+        setDescription('');
+      } else {
+        Alert.alert('Error', data.message);
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Error en el servidor, por favor intenta más tarde.');
+      console.error('Error assigning task automatically:', error);
+    }
+  };
+  
+
 
   return (
     <View style={styles.container}>
@@ -268,7 +312,7 @@ const Page11 = () => {
 
             <TouchableOpacity 
               style={[styles.button,styles.activeButton]}
-              //onPress={handleAutoAssignTask}
+              onPress={handleAutoAssignTask}
             >
               <Text style={styles.buttonText}>Asignar tarea automaticamente</Text>
             </TouchableOpacity>
