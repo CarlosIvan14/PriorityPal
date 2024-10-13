@@ -1,13 +1,13 @@
 const express = require('express');
 const TaskModel = require('../Models/Task');
 const AreaModel = require('../Models/Area');
-const UserModel = require('../Models/User'); 
+const UserModel = require('../Models/User');
 const OpenAI = require('openai');
 const dotenv = require('dotenv');
 const path = require('path');
 
 // Configuración de dotenv
-dotenv.config({ path: path.resolve(__dirname, '../.env') });
+dotenv.config({ path: path.resolve(__dirname, '..//.env') });
 
 // Configuración de la API de OpenAI
 const openai = new OpenAI({
@@ -47,23 +47,51 @@ router.post('/assign-task', async (req, res) => {
             Estos son los usuarios y su carga de tareas:
             ${userTaskCount.map(ut => `${ut.user.name}: ${ut.taskCount} tareas`).join('\n')}
             
-            Basado en esta información, ¿a qué usuario deberíamos asignar la siguiente tarea?, solo regresame el ID del usuario
-            Tarea: ${taskDetails.name}, Descripción: ${taskDetails.description}, Deadline: ${taskDetails.deadline}.
+            Asigna la tarea al usuario que tenga menos tareas asignadas. Si hay varios con la misma cantidad de tareas, elige cualquiera.
+            Si algún usuario tiene 0 tareas, asigna la tarea a esa persona.
+            Solo devuelve el nombre completo del usuario al que se debe asignar la tarea.
+            
+            Detalles de la tarea:
+            - Nombre: ${taskDetails.name}
+            - Descripción: ${taskDetails.description}
+            - Fecha límite: ${taskDetails.deadline}
         `;
 
         const completion = await openai.chat.completions.create({
-            model: 'gpt-3.5-turbo',
+            model: 'gpt-4o',
             messages: [{ role: 'user', content: prompt }]
         });
 
-        // Respuesta de OpenAI
-        const aiResponse = completion.choices[0].message.content;
+        // Respuesta completa de OpenAI
+        const aiResponse = completion.choices[0].message.content.trim();
 
-        res.status(200).json({ message: `Asignación recomendada por AI: ${aiResponse}` });
+        // Buscar el usuario en la base de datos por nombre
+        const assignedUser = await UserModel.findOne({ name: aiResponse });
+
+        if (!assignedUser) {
+            return res.status(404).json({ message: `No se encontró ningún usuario con el nombre: ${aiResponse}` });
+        }
+
+        // Crear nueva tarea después de asignar al usuario
+        const newTask = new TaskModel({
+            id_users: [assignedUser._id],
+            name: taskDetails.name,
+            deadline: taskDetails.deadline,
+            description: taskDetails.description,
+            area_id: areaId,
+            status: "Pendiente", // Agregar cualquier otro campo necesario
+            progress: 0
+        });
+
+        const savedTask = await newTask.save();
+
+        // Responder con el ID del usuario y la tarea creada
+        res.status(201).json({ assignedUserId: assignedUser._id, task: savedTask });
     } catch (error) {
         console.error('Error al procesar la asignación:', error);
         res.status(500).json({ message: 'Error al asignar la tarea' });
     }
 });
+
 
 module.exports = router;
