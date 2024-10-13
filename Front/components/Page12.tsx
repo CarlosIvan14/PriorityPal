@@ -215,7 +215,6 @@ const Page12 = () => {
             autoComplete='off'
             autoCorrect={false}
           />
-
           <Button title="Añadir" onPress={handleCreateUser}/>
         </View>
       ): mode === 'delete'? (
@@ -262,6 +261,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     marginBottom: 20,
+    
   },
   button: {
     backgroundColor: '#9D9D9E',

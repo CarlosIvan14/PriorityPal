@@ -251,8 +251,21 @@ const Page11 = () => {
               <Text>{user.name}</Text>
             </TouchableOpacity>
           ))}
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity 
+            style={[styles.button, styles.activeButton]}
+            onPress={handleCreateTask}
+            >
+              <Text style={styles.buttonText}>Asignar tarea</Text>
+            </TouchableOpacity>
 
-          <Button title="Añadir Tarea" onPress={handleCreateTask} />
+            <TouchableOpacity 
+              style={[styles.button,styles.activeButton]}
+              //onPress={/*Logica para añadir tarea por IA*/}
+            >
+              <Text style={styles.buttonText}>Asignar tarea automaticamente</Text>
+            </TouchableOpacity>
+        </View>
         </View>
       ): (
         <View style={styles.formContainer}>
