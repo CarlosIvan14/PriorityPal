@@ -2,7 +2,6 @@ const express = require('express');
 const TaskModel = require('../Models/Task');
 const AreaModel = require('../Models/Area');
 const User = require('../Models/User'); 
-
 const router = express.Router();
 const mongoose = require('mongoose');
 const Fuse = require('fuse.js'); 
@@ -169,4 +168,6 @@ router.get('/:taskId', async (req, res) => {
     }
   });
 
+
+  //
 module.exports = router;
