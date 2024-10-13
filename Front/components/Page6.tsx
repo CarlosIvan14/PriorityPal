@@ -5,20 +5,22 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 import axios from 'axios';
 
+
 type Page6NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const Page6: React.FC = () => {
   const [areas, setAreas] = useState<any[]>([]);
   const [filteredAreas, setFilteredAreas] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedTeam, setSelectedTeam] = useState<number | null>(null);
-  const [showTasks, setShowTasks] = useState<boolean>(false);
-  const [newAreaName,setNewAreaName] = useState('');
+  const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
+  const [newAreaName, setNewAreaName] = useState('');
   const [newAreaDescription, setNewAreaDescription] = useState('');
+  const [mode, setMode] = useState<'search' | 'add'>('search'); // Modo por defecto: "Buscar área"
+  const [users, setUsers] = useState<any[]>([]); // Estado para almacenar los usuarios
+  const [showUsers, setShowUsers] = useState<boolean>(false); // Estado para controlar la visualización de los usuarios
   const navigation = useNavigation<Page6NavigationProp>();
 
   useEffect(() => {
-    // Obtener las áreas al cargar el componente
     fetchAreas();
   }, []);
 
@@ -35,7 +37,7 @@ const Page6: React.FC = () => {
   const handleSearch = async (text: string) => {
     setSearchQuery(text);
     if (text === '') {
-      setFilteredAreas(areas); // Restablecer la lista completa si no hay búsqueda
+      setFilteredAreas(areas);
     } else {
       try {
         const response = await axios.get(`http://10.0.2.2:3000/areas/search?q=${text}`);
@@ -46,34 +48,52 @@ const Page6: React.FC = () => {
     }
   };
 
-  const handleTeamPress = async (teamId: number) => {
+  const handleTeamPress = (teamId: string) => {
     if (selectedTeam === teamId) {
-      setShowTasks(!showTasks);
+      setSelectedTeam(null);  // Deseleccionar si ya estaba seleccionado
+      setShowUsers(!showUsers);
     } else {
-      setSelectedTeam(teamId);
-      setShowTasks(false); // Resetear la visualización de tareas cuando se selecciona un nuevo equipo
-
-      try{
-        const team = filteredAreas.find((t) => t._id === teamId);
-        if(team){
-          const response = await axios.get(`http://10.0.2.2:3000/tasks/getByAreaName/${team.name}`)
-          team.tasks = response.data.map((task: any) => task.name);
-          setFilteredAreas([...filteredAreas]);
-        }
-      }catch(error){
-        console.error('Error al obtener tareas del área:',error);
-      }
+      setSelectedTeam(teamId);  // Seleccionar el nuevo equipo
+      handleShowUsers(teamId);
     }
   };
 
+  const renderTaskButton = () => {
+    if (!selectedTeam) return null;
+  
+    return (
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity
+          style={styles.taskButton}
+          onPress={() => navigation.navigate('Page7', { areaId: selectedTeam })}
+        >
+          <Text style={styles.taskButtonText}>Ver Tareas</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
+
+  const handleShowUsers = async (teamId: string) => {
+    console.log(`Mostrando usuarios para el equipo con ID: ${teamId}`);
+    try {
+      const response = await axios.get(`http://10.0.2.2:3000/users/area/${teamId}`);
+      setUsers(response.data);
+      setShowUsers(true);
+    } catch (error) {
+      console.error('Error al obtener usuarios del área:', error);
+    }
+  };
+  
+  
   const handleAddArea = async () => {
-    if(!newAreaName || !newAreaDescription){
+    if (!newAreaName || !newAreaDescription) {
       Alert.alert('Error', 'Por favor, complete todos los campos');
       return;
     }
 
-    try{
-      const response = await axios.post('http://10.0.2.2:3000/areas/',{
+    try {
+      const response = await axios.post('http://10.0.2.2:3000/areas/', {
         name: newAreaName,
         description: newAreaDescription,
       });
@@ -81,22 +101,41 @@ const Page6: React.FC = () => {
       setNewAreaName('');
       setNewAreaDescription('');
       Alert.alert('Éxito', 'Área agregada con éxito');
-    }catch (error){
+    } catch (error) {
       console.error('Error al agregar el nuevo área', error);
       Alert.alert('Error', 'No se pudo agregar el área');
     }
   };
 
-  const handleDeleteArea = async (name: string) =>{
-    try{
+  const handleDeleteArea = async (name: string) => {
+    try {
       const response = await axios.delete(`http://10.0.2.2:3000/areas/deleteByName/${name}`);
       setAreas(areas.filter(area => area.name !== name));
       setFilteredAreas(filteredAreas.filter(area => area.name !== name));
-      Alert.alert('Éxito','Area eliminada exitosamente');
-    }catch(error){
+      Alert.alert('Éxito', 'Área eliminada exitosamente');
+    } catch (error) {
       console.error('Error al eliminar área:', error);
       Alert.alert('Error', 'No se pudo eliminar el área');
     }
+  };
+
+  const confirmDeleteArea = (areaName: string) => {
+    Alert.alert(
+      'Confirmar eliminación',
+      `¿Seguro que quiere eliminar el área "${areaName}"?`,
+      [
+        {
+          text: 'Cancelar',
+          onPress: () => console.log('Eliminación cancelada'),
+          style: 'cancel',
+        },
+        {
+          text: 'Aceptar',
+          onPress: () => handleDeleteArea(areaName),
+        },
+      ],
+      { cancelable: false }
+    );
   };
 
   const renderTeamList = () => {
@@ -107,100 +146,105 @@ const Page6: React.FC = () => {
           styles.teamButton,
           selectedTeam === team._id && styles.selectedTeamButton,
         ]}
-        onPress={() => handleTeamPress(team._id)}
+        onPress={() => handleTeamPress(team._id)}  // Solo selecciona el equipo
       >
         <View style={styles.teamInfo}>
           <Image source={require('../public/teams.jpg')} style={styles.Icon} />
           <Text style={styles.teamName}>{team.name}</Text>
         </View>
-        <TouchableOpacity
-          style={styles.deleteButton}
-          onPress={() => handleDeleteArea(team.name)}
-        >
-          <Text style = {styles.deleteButtonText}> Eliminar</Text>
-
-        </TouchableOpacity>
+        <View style={styles.buttonGroup}>
+          <TouchableOpacity
+            style={styles.userButton}
+            onPress={() => handleShowUsers(team._id)}  // Mostrar usuarios
+          >
+            <Text style={styles.userButtonText}>Ver Usuarios</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.deleteButton}
+            onPress={() => confirmDeleteArea(team.name)}  // Confirmar eliminación del equipo
+          >
+            <Text style={styles.deleteButtonText}>Eliminar</Text>
+          </TouchableOpacity>
+        </View>
       </TouchableOpacity>
     ));
   };
-
-  const renderTaskButton = () => {
-    if (selectedTeam === null) return null;
-
+  
+  const renderUserList = () => {
+    if (!showUsers) return null; // Si no se deben mostrar usuarios, retorna null
+  
     return (
-      <TouchableOpacity
-        style={styles.taskButton}
-        onPress={() => setShowTasks(!showTasks)}
-      >
-        <Text style={styles.taskButtonText}>Ver Tareas</Text>
-      </TouchableOpacity>
-    );
-  };
-
-  const renderTeamDetails = () => {
-    const team = filteredAreas.find((t) => t._id === selectedTeam);
-    if (!team || !showTasks) return null;
-
-    return (
-      <View style={styles.teamDetails2}>
-      <View style={styles.teamDetails}>
-        <Text style={styles.tasksTitle}>Tareas:</Text>
-        <View style={styles.tasksList}>
-          {team.tasks.map((task, index) => (
-            <TouchableOpacity testID="go-to-page8" key={index} onPress={() => navigation.navigate('Page8',{taskId:task.id})}>
-              <Text style={styles.taskItem}>
-                ○ {task}
-              </Text>
-            </TouchableOpacity>
+      <View style={styles.userListFullContainer}>
+        <Text style={styles.usersTitle}>Usuarios en esta área:</Text>
+        <ScrollView contentContainerStyle={styles.scrollViewContent}>
+          {users.map((user) => (
+            <View key={user._id} style={styles.userBox}>
+              <Text style={styles.userName}>{user.username}</Text>
+            </View>
           ))}
-        </View>
-      </View>
+        </ScrollView>
       </View>
     );
   };
+  
 
   return (
     <View style={styles.container}>
-      <TextInput
-        style={styles.searchInput}
-        placeholder="Buscar equipo"
-        value={searchQuery}
-        onChangeText={handleSearch}
-      />
-       <View style={styles.addAreaContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Nombre del área"
-          value={newAreaName}
-          onChangeText={setNewAreaName}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Descripción del área"
-          value={newAreaDescription}
-          onChangeText={setNewAreaDescription}
-        />
-        <TouchableOpacity style={styles.addButton} onPress={handleAddArea}>
-          <Text style={styles.addButtonText}>Agregar Área</Text>
-        </TouchableOpacity>
-      </View>
+      <TouchableOpacity
+        style={styles.modeButton}
+        onPress={() => setMode(mode === 'search' ? 'add' : 'search')}
+      >
+        <Text style={styles.modeButtonText}>
+          {mode === 'search' ? 'Agregar área' : 'Buscar área'}
+        </Text>
+      </TouchableOpacity>
 
-      <ScrollView contentContainerStyle={styles.teamsContainer}>
-        {renderTeamList()}
-      </ScrollView>
-      {renderTaskButton()}
-      {renderTeamDetails()}
+      {mode === 'search' ? (
+        <>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Buscar equipo"
+            value={searchQuery}
+            onChangeText={handleSearch}
+          />
+
+          <ScrollView contentContainerStyle={styles.teamsContainer}>
+            {renderTeamList()}
+          </ScrollView>
+          {renderUserList()}
+          {renderTaskButton()}
+        </>
+      ) : (
+        <View style={styles.addAreaContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder="Nombre del área"
+            value={newAreaName}
+            onChangeText={setNewAreaName}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Descripción del área"
+            value={newAreaDescription}
+            onChangeText={setNewAreaDescription}
+          />
+          <TouchableOpacity style={styles.addButton} onPress={handleAddArea}>
+            <Text style={styles.addButtonText}>Agregar Área</Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  // Los estilos permanecen iguales
   container: {
-    flex: 1, 
+    flex: 1,
     padding: 20,
   },
   teamsContainer: {
-    flexGrow: 1, 
+    flexGrow: 1,
   },
   teamButton: {
     backgroundColor: '#93d4d6',
@@ -225,7 +269,6 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 10,
     alignItems: 'center',
-   
   },
   taskButtonText: {
     color: 'white',
@@ -242,21 +285,15 @@ const styles = StyleSheet.create({
   },
   tasksTitle: {
     fontSize: 18,
-    color: 'white',
-    marginBottom: 10,
+    fontWeight: 'bold',
   },
   tasksList: {
-    marginLeft: 10,
+    marginTop: 10,
   },
   taskItem: {
     fontSize: 16,
-    color: 'white',
+    color: 'black',
     marginBottom: 5,
-  },
-  Icon: {
-    width: 55,
-    height: 55,
-    marginHorizontal: 20,
   },
   searchInput: {
     height: 40,
@@ -264,45 +301,112 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 5,
     paddingHorizontal: 10,
-    marginBottom: 15,
-    backgroundColor: '#fff',
+    marginBottom: 20,
+  },
+  addAreaContainer: {
+    marginTop: 20,
+  },
+  input: {
+    height: 40,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    marginBottom: 10,
+  },
+  addButton: {
+    backgroundColor: '#30AFAF',
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  addButtonText: {
+    color: 'white',
     fontSize: 16,
+  },
+  modeButton: {
+    backgroundColor: '#30AFAF',
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modeButtonText: {
+    color: 'white',
+    fontSize: 16,
+  },
+  deleteButton: {
+    backgroundColor: '#1E2F57',
+    padding: 5,
+    borderRadius: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 'auto',
+  },
+  deleteButtonText: {
+    color: 'white',
+    fontSize: 12,
+  },
+  Icon: {
+    width: 55,
+    height: 55,
+    marginHorizontal: 20,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 20,
+    
+  },
+  buttonGroup: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
+  },
+  userButton: {
+    backgroundColor: '#1E2F57',
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  userButtonText: {
+    color: 'white',
+    fontSize: 16,
+  },
+  userListFullContainer: {
+    flex: 1,  // Ocupa toda la pantalla
+    backgroundColor: '#30afaf', // Fondo para toda la lista de usuarios
+    padding: 20, 
+    height:'80%',
+  },
+  usersTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  userItem: {
+    fontSize: 16,
+    color: 'black',
+    marginBottom: 5,
+  },
+  userBox: {
+    backgroundColor: '#fff',
+    padding: 10,
+    marginVertical: 5,
+    borderRadius: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1,
 },
-scrollContainer: {
-  flex: 1,
+userName: {
+    fontWeight: 'bold',
+    fontSize: 16,
+}, 
+scrollViewContent: {
+  paddingBottom: 30, 
 },
-addAreaContainer: {
-  marginBottom: 20,
-},
-input: {
-  height: 40,
-  borderColor: '#ccc',
-  borderWidth: 1,
-  borderRadius: 5,
-  paddingHorizontal: 10,
-  marginBottom: 10,
-  backgroundColor: '#fff',
-},
-addButton: {
-  backgroundColor: '#30AFAF',
-  padding: 10,
-  borderRadius: 5,
-  alignItems: 'center',
-},
-addButtonText: {
-  color: 'white',
-  fontSize: 16,
-},
-deleteButton: {
-  backgroundColor: '#FF5733',
-  padding: 8,
-  borderRadius: 5,
-},
-deleteButtonText: {
-  color: 'white',
-  fontSize: 14,
-},
-
+  
 });
 
 export default Page6;

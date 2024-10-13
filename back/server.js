@@ -4,6 +4,7 @@ const cors = require('cors');
 const taskRoutes = require('./routes/taskRoutes');
 const userRoutes = require('./routes/userRoutes');
 const areaRoutes = require('./routes/areaRoutes');
+const aiRoutes = require('./routes/aiRoutes'); 
 const dotenv = require('dotenv');
 
 // Cargar variables de entorno desde el archivo .env
@@ -23,13 +24,11 @@ mongoose.connect(mongoURI)
 app.use(cors());
 app.use(express.json());
 
-
-
 // Usar las rutas
 app.use('/tasks', taskRoutes);
 app.use('/users', userRoutes);
 app.use('/areas', areaRoutes);
-
+app.use('/openAiRoute', aiRoutes); // Asegúrate de que esta línea sea correcta
 
 app.listen(port, () => {
   console.log(`Servidor corriendo en http://localhost:${port}`);
