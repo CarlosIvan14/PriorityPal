@@ -1,41 +1,101 @@
 const express = require('express');
-const axios = require('axios');
-const FormData = require('form-data');
-const fs = require('fs');
-const router = express.Router();
+const router = express.Router();  // Aquí defines el enrutador
+const mongoose = require('mongoose');
+const TaskModel = require('../Models/Task');
+const AreaModel = require('../Models/Area');
+const User = require('../Models/User');
+const OpenAI = require('openai');
+const dotenv = require('dotenv');
+const path = require('path');
 
-// Endpoint para enviar solicitudes a OpenAI GPT-4
-router.post('/gpt4', async (req, res) => {
+// Configuración de dotenv
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
+
+// Configuración de la API de OpenAI
+const openai = new OpenAI({
+    apiKey: process.env.OPENAI_KEY
+});
+
+// Crear una nueva tarea y asignarla automáticamente usando ChatGPT
+router.post('/assignAutomatically', async (req, res) => {
+    const { name, description, deadline, area_id } = req.body;
+
+    if (!name || !description || !deadline || !area_id) {
+        return res.status(400).json({ message: 'Todos los campos son obligatorios' });
+    }
+
     try {
-        const { prompt, responseSchema, filePaths } = req.body;
+        // Convertir el area_id a ObjectId si no lo es
+        const objectId = mongoose.Types.ObjectId.isValid(area_id) ? mongoose.Types.ObjectId(area_id) : null;
 
-        // Crear form-data para adjuntar archivos
-        const form = new FormData();
-        if (filePaths && filePaths.length > 0) {
-            filePaths.forEach((filePath, index) => {
-                form.append(`file_${index}`, fs.createReadStream(filePath));
-            });
+        if (!objectId) {
+            return res.status(400).json({ message: 'El ID del área no es válido.' });
         }
 
-        // Agregar el prompt y el esquema de respuesta
-        form.append('prompt', prompt);
-        form.append('response_schema', JSON.stringify(responseSchema));
+        // Obtener todos los usuarios del área específica
+        const area = await AreaModel.findById(objectId).populate('users');
+        const users = area?.users || [];
 
-        // Hacer la solicitud a OpenAI GPT-4 API
-        const apiKey = process.env.OPENAI_API_KEY; // Asegúrate de tener tu clave en el archivo .env
-        const response = await axios.post('https://api.openai.com/v1/engines/gpt-4/completions', form, {
-            headers: {
-                ...form.getHeaders(),
-                'Authorization': `Bearer ${apiKey}`
-            }
+        if (users.length === 0) {
+            return res.status(404).json({ message: 'No hay usuarios disponibles en esta área' });
+        }
+
+        // Obtener la cantidad de tareas asignadas a cada usuario
+        const usersWithTaskCount = await Promise.all(users.map(async (user) => {
+            const taskCount = await TaskModel.countDocuments({ id_users: user._id });
+            return { name: user.name, taskCount };
+        }));
+
+        // Crear el prompt para ChatGPT
+        const prompt = `
+            Asigna la siguiente tarea a uno de los usuarios en el área de trabajo de forma justa.
+            Aquí están los detalles de la tarea:
+            - Nombre: ${name}
+            - Descripción: ${description}
+            - Fecha límite: ${deadline}
+
+            Aquí está la lista de usuarios con la cantidad de tareas que tienen:
+            ${usersWithTaskCount.map(u => `- ${u.name}: ${u.taskCount} tareas`).join('\n')}
+            
+            Por favor asigna la tarea al usuario con menos tareas.
+        `;
+
+        // Enviar solicitud a OpenAI
+        const completion = await openai.chat.completions.create({
+            model: 'gpt-4',
+            messages: [
+                { role: 'system', content: 'Eres un experto en gestión de tareas y asignaciones de trabajo.' },
+                { role: 'user', content: prompt }
+            ]
         });
 
-        // Responder con el resultado de GPT-4
-        res.json(response.data);
+        // Obtener el nombre del usuario al que se le asignará la tarea
+        const assignmentResponse = completion.choices[0].message.content;
+        const assignedUserName = assignmentResponse.match(/Asignar a: (\w+)/i)[1];
+
+        // Buscar el usuario por nombre
+        const assignedUser = users.find(user => user.name === assignedUserName);
+
+        if (!assignedUser) {
+            return res.status(404).json({ message: 'No se encontró el usuario asignado por ChatGPT' });
+        }
+
+        // Crear nueva tarea con el usuario asignado
+        const newTask = new TaskModel({
+            id_users: [assignedUser._id],
+            name,
+            description,
+            deadline,
+            area_id: objectId
+        });
+
+        const savedTask = await newTask.save();
+        res.status(201).json(savedTask);
     } catch (error) {
-        console.error('Error en la solicitud a GPT-4:', error);
-        res.status(500).json({ message: 'Error en la solicitud a GPT-4', error: error.message });
+        console.error('Error al asignar la tarea automáticamente usando OpenAI:', error);
+        res.status(500).json({ message: 'Error en el servidor, por favor intenta más tarde.' });
     }
 });
 
+// Exportar el router para que pueda ser usado en otros archivos
 module.exports = router;

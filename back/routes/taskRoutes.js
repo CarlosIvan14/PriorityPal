@@ -1,6 +1,8 @@
 const express = require('express');
 const TaskModel = require('../Models/Task');
 const AreaModel = require('../Models/Area');
+const User = require('../Models/User'); 
+
 const router = express.Router();
 const mongoose = require('mongoose');
 const Fuse = require('fuse.js'); 
@@ -120,7 +122,7 @@ router.get('/getByAreaName/:areaName', async (req, res) => {
 
         res.status(200).json(tasks);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+;        res.status(500).json({ message: error.message });
     }
 });
 // Obtener tareas por ID de área
@@ -137,7 +139,7 @@ router.get('/getByAreaId/:areaId', async (req, res) => {
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
-});
+})
 
 
 // Eliminar una tarea por nombre
@@ -166,5 +168,5 @@ router.get('/:taskId', async (req, res) => {
       res.status(500).json({ message: error.message });
     }
   });
-  
+
 module.exports = router;
