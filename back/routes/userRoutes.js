@@ -154,17 +154,27 @@ router.get('/area/:areaId', async (req, res) => {
 });
 
 //Mandar un request de mensaje
-router.post('/sendrequest', async (req,res) =>{
-    const {senderId,receiverId,message} = req.body;
+router.post('/sendrequest', async (req, res) => {
+    const { senderId, receiverId, message } = req.body;
 
-    const receiver = await UserModel.findById(receiverId)
-    if(!receiver){
-        return res.status(404).json({message:'Receiver not found'});
-    };
+    console.log(senderId);
+    console.log(receiverId);
+    console.log(message);
 
-    receiver.request.push({from:senderId,message})
+    const receiver = await UserModel.findById(receiverId);
+    if (!receiver) {
+        return res.status(404).json({ message: 'Receiver not found' });
+    }
+
+    // Inicializa la propiedad request como un array si no existe
+    if (!receiver.request) {
+        receiver.request = [];
+    }
+
+    receiver.request.push({ from: senderId, message });
     await receiver.save();
-    
-    res.status(200).json({message:'Request sent succesfully'});
-})
+
+    res.status(200).json({ message: 'Request sent successfully' });
+});
+
 module.exports = router;
