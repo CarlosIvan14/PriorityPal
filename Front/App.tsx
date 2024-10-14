@@ -5,7 +5,8 @@ import Footer from './components/Footer';
 import MainStack from './navigation/MainStack';
 import { UserProvider, useUser } from './components/UserContext'; // Asegúrate de que la ruta sea correcta
 import { NavigationContainer } from '@react-navigation/native';
-
+import { SocketContextProvider } from './socketcontext';
+import {AuthProvider} from './AuthContext';
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -41,9 +42,11 @@ const AppContent = () => {
 export default function App() {
   return (
     <UserProvider>
-      <NavigationContainer>
-        <AppContent />
-      </NavigationContainer>
+      <SocketContextProvider>
+        <NavigationContainer>
+          <AppContent />
+        </NavigationContainer>
+      </SocketContextProvider>
     </UserProvider>
   );
 }

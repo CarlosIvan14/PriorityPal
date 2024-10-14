@@ -167,14 +167,84 @@ router.post('/sendrequest', async (req, res) => {
     }
 
     // Inicializa la propiedad request como un array si no existe
-    if (!receiver.request) {
-        receiver.request = [];
+    if (!receiver.requests) {
+        receiver.requests = [];
     }
 
-    receiver.request.push({ from: senderId, message });
+    receiver.requests.push({ from: senderId, message });
     await receiver.save();
 
     res.status(200).json({ message: 'Request sent successfully' });
+});
+
+// Obtener solicitudes de chats
+router.get('/getrequests/:userId', async (req, res) => {
+    try {
+        const userId = req.params.userId;
+
+        // Buscar el usuario y popular el campo "requests.from" con los datos "name" y "email"
+        const user = await UserModel.findById(userId).populate("requests.from", "name");
+
+        // Verificar si el usuario existe
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        // Devolver las solicitudes del usuario
+        res.status(200).json(user.requests);
+    } catch (error) {
+        // Registrar el error en la consola
+        console.error('Error al obtener las solicitudes:', error);
+
+        // Devolver una respuesta de error al cliente
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+});
+ router.post('/acceptrequest', async (req,res) => {
+    try{
+        const {userId,requestId} = req.body;
+
+        const user =await UserModel.findById(userId);
+        if(!user){
+            return res.status(404).json({message:"Usuario no encontrado"});
+        }
+        const updatedUser= await UserModel.findByIdAndUpdate(userId,{
+            $pull:{requests:{from:requestId}}
+        },
+        {new:true},
+        );
+        if(!updatedUser){
+            return res.status(404).json({message:"Solicitud no encontrada"})
+        }
+        
+        await UserModel.findByIdAndUpdate(userId,{
+            $push:{friends:requestId},
+        });
+        const friendUser = await UserModel.findByIdAndUpdate(requestId,{
+            $push:{friends:userId},
+        });
+
+        if(!friendUser){
+            return res.status(404).json({message:"Friend not found"})
+        }
+        
+        res.status(200).json({message:"Solicitud aceptada "})
+    } catch(error){
+        console.log("error",error);
+        res.status(500).json({message:"Error en el server"})
+    }
+ });
+
+router.get('/user/:userId', async (req,res) => {
+    try{
+        const userId = req.params.userId;
+
+        const users = await UserModel.findById(userId).populate('friends','name');
+        console.log('Amigos del usuario:', users.friends);
+        res.json(users.friends);
+    }catch(error){
+        console.log('Error al fetch de los usuarios',error);
+    }
 });
 
 module.exports = router;

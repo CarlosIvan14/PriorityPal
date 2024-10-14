@@ -3,7 +3,7 @@ const { type } = require('os');
 
 // Modelo para el mensaje
 const messageSchema = new Schema({
-    senderID:{
+    senderId:{
         type:mongoose.Schema.Types.ObjectId,
         ref: "User",
     },

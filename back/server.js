@@ -6,6 +6,7 @@ const userRoutes = require('./routes/userRoutes');
 const areaRoutes = require('./routes/areaRoutes');
 const aiRoutes = require('./routes/aiRoutes'); 
 const dotenv = require('dotenv');
+const Message = require('./Models/message');
 
 // Cargar variables de entorno desde el archivo .env
 dotenv.config();
@@ -32,4 +33,95 @@ app.use('/openAiRoute', aiRoutes); // Asegúrate de que esta línea sea correcta
 
 app.listen(port, () => {
   console.log(`Servidor corriendo en http://localhost:${port}`);
+});
+
+const http = require('http').createServer(app);
+
+const io = require("socket.io")(http);
+
+// {"userId": "socket ID"}
+
+const userSocketMap = {};
+
+io.on('connection',socket => {
+    console.log("a user is connetcted",socket.id);
+
+    const userID = socket.handshake.query.userId;
+
+    console.log("userid",userId);
+
+    if(userId !== "undefined"){
+        userSocketMap[userId] = socket.id
+    }
+
+    console.log("user socket data", userSocketMap);
+
+    socket.on("disconnect", () =>{
+        console.log("user disconnected",socket.id);
+        delete userSocketMap[userId];
+    });
+
+    socket.on("sendMessage",({senderId, receiverId, message}) => {
+        const receiverSocketId = userSocketMap[receiverId];
+        
+        console.log("receiver Id",receiverId);
+
+        if(receiverSocketId){
+         io.to(receiverSocketId).emit('receiveMessage',{
+            senderId,
+            message
+        });   
+        }
+    });
+});
+
+http.listen(6000,() =>{
+    console.log("Socket.IO running on port 6000");
+})
+
+app.post('/sendmessage',async(req,res) =>{
+  try{
+      const {senderId, receiverId, message} = req.body;
+
+      const newMessage = new Message({
+          senderId,
+          receiverId,
+          message,
+      });
+
+      await newMessage.save();
+
+      const receiverSocketId = userSocketMap[receiverId];
+
+      if(receiverSocketId){
+        console.log("emmittin revieveMessage event to the reciver", receiverId);
+        io.to(receiverSocketId).emit("newMeesage",newMessage)
+      }else{
+        console.log("Receiver socket ID not foud");
+      }
+
+      res.status(201).json(newMessage)
+  } catch (error){
+      console.log("ERORR", error);
+  }
+})
+
+app.get("/messages", async (req, res) => {
+  try {
+    const { senderId, receiverId } = req.query;
+
+    console.log("Fetching messages between", senderId, "and", receiverId);
+
+    const messages = await Message.find({
+      $or: [
+        { senderId: senderId, receiverId: receiverId },
+        { senderId: receiverId, receiverId: senderId }
+      ]
+    }).populate('senderId', "_id name"); // Corregido 'sederId' a 'senderId'
+    console.log(messages);
+    res.status(200).json(messages);
+  } catch (error) {
+    console.log('Error', error);
+    res.status(500).json({ message: 'Error al obtener los mensajes' });
+  }
 });

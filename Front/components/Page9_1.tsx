@@ -43,14 +43,13 @@ export default function Page9_1() {
     <View style={styles.container}>
       <Text style={styles.header}>{name}</Text>
       <View style={styles.messagesContainer}>
-        <Text style={styles.messageReceived}>Holis, estas libre a las 4 swetiee?</Text>
-        <Text style={styles.messageSent}>Holi, Sweetie</Text>
-        <Text style={styles.messageSent}>Mmm, lo checo</Text>
-        <Text style={styles.messageReceived}>Gracias 😍</Text>
+       
       </View>
 
       <View style={styles.inputContainer}>
         <TextInput
+          value={message}
+          onChangeText={setMessage}
           style={styles.input}
           placeholder="Escribe tu mensaje aqui"
         />
