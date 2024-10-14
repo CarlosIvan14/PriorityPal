@@ -1,9 +1,10 @@
-import React from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, KeyboardAvoidingView } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, KeyboardAvoidingView, Alert } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 import { useUser } from './UserContext'; // Importa el hook
+import axios from 'axios';
 
 type Page9_1NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Page9_1'>;
 type Page9_1RouteProp = RouteProp<RootStackParamList, 'Page9_1'>;
@@ -12,7 +13,31 @@ export default function Page9_1() {
   const navigation = useNavigation<Page9_1NavigationProp>();
   const route = useRoute<Page9_1RouteProp>();
   const { name,receiverId } = route.params;
+  const [message, setMessage] = useState('');
   const { user } = useUser();
+
+
+  console.log("userId",user._id);
+  console.log("Rec",route?.params.receiverId);
+  const sendMessage = async () =>{
+    try{
+      const userData ={
+        senderId: user._id,
+        receiverId: receiverId,
+        message:message
+      };
+
+      const response = await axios.post("http://10.0.2.2:3000/users/sendrequest",userData);
+      if(response.status == 200 ){
+        setMessage("");
+        Alert.alert("Tú solicitud ha sido enviada", "espera a que el usuario acepte tu solicitud")
+
+      }
+    }catch(error){
+      console.log("Error",error)
+    }
+  }
+
 
   return (
     <View style={styles.container}>
@@ -29,7 +54,9 @@ export default function Page9_1() {
           style={styles.input}
           placeholder="Escribe tu mensaje aqui"
         />
-        <TouchableOpacity>
+        <TouchableOpacity
+        onPress={sendMessage}
+        >
           <Text style={styles.sendButton}>Enviar</Text>
         </TouchableOpacity>
       </View>
