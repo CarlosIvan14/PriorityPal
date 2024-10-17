@@ -147,7 +147,7 @@ const Page11 = () => {
             text: 'Ok', 
             onPress: () => {
               setTaskName('');  
-              navigation.replace('Page12');
+              navigation.replace('Page11');
             }
           }
         ]);
