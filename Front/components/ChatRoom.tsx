@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, KeyboardAvoidingView, Alert } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, KeyboardAvoidingView, Alert, ScrollView } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
@@ -87,6 +87,7 @@ export default function ChatRoom() {
   return (
     <View style={styles.container}>
       <Text style={styles.header}>{name}</Text>
+      <ScrollView>
       <View style={styles.messagesContainer}>
         {messages.map((msg, index) => (
             <Text
@@ -97,8 +98,7 @@ export default function ChatRoom() {
             </Text>
         ))}
         </View>
-
-
+        </ScrollView>
 
       <View style={styles.inputContainer}>
         <TextInput

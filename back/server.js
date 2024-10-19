@@ -47,7 +47,7 @@ const userSocketMap = {};
 io.on('connection',socket => {
     console.log("a user is connetcted",socket.id);
 
-    const userID = socket.handshake.query.userId;
+    const userId = socket.handshake.query.userId;
 
     console.log("userid",userId);
 

@@ -47,6 +47,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         const decodedToken = jwtDecode<DecodedToken>(authUser);
         setToken(authUser);
+        
         setUserId(decodedToken.userId);
         // Opcional: Puedes realizar una petición para obtener los datos completos del usuario aquí
       } catch (error) {
